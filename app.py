@@ -81,28 +81,16 @@ except Exception as e:
 # Context processor to make Firebase config available to all templates
 @app.context_processor
 def inject_firebase_config():
-    if is_development:
-        # Use development Firebase configuration that works locally
-        return {
-            'firebase_api_key': 'AIzaSyDBXz-8D9pKWIUTC9InEbftAxrtDwquw0Q',
-            'firebase_auth_domain': 'bumpy-52866.firebaseapp.com',
-            'firebase_project_id': 'bumpy-52866',
-            'firebase_storage_bucket': 'bumpy-52866.appspot.com',
-            'firebase_messaging_sender_id': '80805253315',
-            'firebase_app_id': '1:80805253315:web:b8ac160e359104a1591276',
-            'firebase_measurement_id': 'G-T0M9JPFEF6'
-        }
-    else:
-        # Use environment variables for production
-        return {
-            'firebase_api_key': os.environ.get('FIREBASE_API_KEY'),
-            'firebase_auth_domain': os.environ.get('FIREBASE_AUTH_DOMAIN'),
-            'firebase_project_id': os.environ.get('FIREBASE_PROJECT_ID'),
-            'firebase_storage_bucket': os.environ.get('FIREBASE_STORAGE_BUCKET'),
-            'firebase_messaging_sender_id': os.environ.get('FIREBASE_MESSAGING_SENDER_ID'),
-            'firebase_app_id': os.environ.get('FIREBASE_APP_ID'),
-            'firebase_measurement_id': os.environ.get('FIREBASE_MEASUREMENT_ID')
-        }
+    # Use the same Firebase configuration for both development and production
+    return {
+        'firebase_api_key': os.environ.get('FIREBASE_API_KEY', 'AIzaSyDBXz-8D9pKWIUTC9InEbftAxrtDwquw0Q'),
+        'firebase_auth_domain': os.environ.get('FIREBASE_AUTH_DOMAIN', 'bumpy-52866.firebaseapp.com'),
+        'firebase_project_id': os.environ.get('FIREBASE_PROJECT_ID', 'bumpy-52866'),
+        'firebase_storage_bucket': os.environ.get('FIREBASE_STORAGE_BUCKET', 'bumpy-52866.firebasestorage.app'),
+        'firebase_messaging_sender_id': os.environ.get('FIREBASE_MESSAGING_SENDER_ID', '80805253315'),
+        'firebase_app_id': os.environ.get('FIREBASE_APP_ID', '1:80805253315:web:b8ac160e359104a1591276'),
+        'firebase_measurement_id': os.environ.get('FIREBASE_MEASUREMENT_ID', 'G-T0M9JPFEF6')
+    }
 
 # Register blueprints
 app.register_blueprint(auth_bp)
