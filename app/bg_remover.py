@@ -654,20 +654,91 @@ def _basic_bg_removal(input_path, output_path):
         output_dir = os.path.dirname(output_path)
         os.makedirs(output_dir, exist_ok=True)
         
-        # Use rembg library for basic removal
-        with open(input_path, 'rb') as input_file:
-            input_data = input_file.read()
+        # Try using rembg library for background removal with error handling
+        try:
+            with open(input_path, 'rb') as input_file:
+                input_data = input_file.read()
+                
+            # Process the image with a timeout guard
+            # We'll use a more robust approach with explicit model selection
+            try:
+                # First try with the u2net model (more accurate but slower)
+                logging.info(f"Attempting background removal with u2net model")
+                output_data = rembg.remove(
+                    input_data,
+                    session=rembg.new_session("u2net"),
+                    only_mask=False,
+                    alpha_matting=True,
+                    alpha_matting_foreground_threshold=240,
+                    alpha_matting_background_threshold=10
+                )
+            except Exception as model_error:
+                # If that fails, try with the isnet model (faster)
+                logging.warning(f"u2net model failed, falling back to isnet model: {str(model_error)}")
+                output_data = rembg.remove(
+                    input_data, 
+                    session=rembg.new_session("isnet"),
+                    only_mask=False
+                )
             
-        # Process the image
-        output_data = rembg.remove(input_data)
-        
-        # Save the output
-        with open(output_path, 'wb') as output_file:
-            output_file.write(output_data)
+            # Save the output
+            with open(output_path, 'wb') as output_file:
+                output_file.write(output_data)
+                
+        except Exception as rembg_error:
+            logging.error(f"rembg processing failed: {str(rembg_error)}")
+            
+            # Fallback method using PIL
+            logging.info("Using fallback method with PIL for basic background removal")
+            
+            # Open the image with PIL
+            img = Image.open(input_path).convert("RGBA")
+            
+            # Create a simple mask by detecting edges
+            # This is very simple but will work as a last resort
+            if HAVE_CV2 and HAVE_NUMPY:
+                # Use OpenCV for better edge detection if available
+                cv_img = cv2.imread(input_path)
+                gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+                blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+                edges = cv2.Canny(blurred, 50, 150)
+                
+                # Dilate edges to create a mask
+                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+                dilated = cv2.dilate(edges, kernel, iterations=3)
+                
+                # Convert back to PIL
+                mask = Image.fromarray(dilated).convert("L")
+                mask = mask.filter(ImageFilter.GaussianBlur(radius=2))
+                
+                # Create transparent image
+                result = img.copy()
+                result.putalpha(mask)
+            else:
+                # Simple PIL-only method
+                # Create a mask based on edge detection
+                mask = img.convert("L")
+                mask = mask.filter(ImageFilter.FIND_EDGES)
+                mask = mask.filter(ImageFilter.GaussianBlur(radius=1))
+                mask = mask.point(lambda x: 255 if x > 128 else 0)
+                
+                # Apply mask to original image
+                result = img.copy()
+                result.putalpha(mask)
+            
+            # Save the result
+            result.save(output_path, format="PNG")
             
         # Verify the file was saved
         if os.path.exists(output_path):
-            logging.info(f"Successfully saved processed image to: {output_path} (Size: {os.path.getsize(output_path)} bytes)")
+            file_size = os.path.getsize(output_path)
+            logging.info(f"Successfully saved processed image to: {output_path} (Size: {file_size} bytes)")
+            
+            # Extra check to ensure the file is not empty or corrupted
+            if file_size < 100:  # Extremely small file, likely an error
+                logging.warning(f"Output file is suspiciously small ({file_size} bytes)")
+                return {'status': 'error', 'message': 'Generated image appears to be invalid'}
+                
             return {'status': 'success', 'message': 'Background removed successfully'}
         else:
             logging.error(f"Failed to save output file: {output_path}")

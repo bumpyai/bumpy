@@ -8,4 +8,10 @@ services:
       - key: FLASK_ENV
         value: production
       - key: PYTHONUNBUFFERED
-        value: true 
+        value: true
+      - key: REMBG_CACHE_DIR
+        value: /tmp/rembg_cache
+    scaling:
+      minInstances: 1
+      maxInstances: 2
+    plan: standard 
