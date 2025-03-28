@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}BUMPY | AI Background Remover{% endblock %}
+
+{% block head %}
+<style>
+    .hero-section {
+        background-color: var(--section-bg);
+        padding: 80px 0 60px;
+    }
+    
+    .hero-title {
+        font-size: 42px;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        line-height: 1.2;
+    }
+    
+    .hero-subtitle {
+        font-size: 18px;
+        color: #6b7280;
+        margin-bottom: 32px;
+        max-width: 600px;
+    }
+    
+    .accent-text {
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+    
+    .primary-button {
+        background-color: var(--accent-color);
+        color: white;
+        font-weight: 500;
+        padding: 12px 24px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    
+    .primary-button:hover {
+        background-color: var(--accent-hover);
+        transform: translateY(-2px);
+    }
+    
+    .example-card {
+        border-radius: 12px;
+        overflow: hidden;
+        background-color: var(--card-bg);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .example-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .example-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        max-width: 960px;
+        margin: 0 auto;
+    }
+    
+    @media (max-width: 768px) {
+        .example-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    .section-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        text-align: center;
+    }
+    
+    .section-subtitle {
+        font-size: 18px;
+        color: #6b7280;
+        max-width: 600px;
+        margin: 0 auto 40px;
+        text-align: center;
+    }
+    
+    .feature-section {
+        padding: 80px 0;
+        background-color: white;
+    }
+    
+    .feature-container {
+        display: flex;
+        align-items: center;
+        gap: 60px;
+    }
+    
+    @media (max-width: 768px) {
+        .feature-container {
+            flex-direction: column;
+        }
+    }
+    
+    .feature-image {
+        flex: 1;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-content {
+        flex: 1;
+    }
+    
+    .feature-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 16px;
+    }
+    
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .feature-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+    
+    .feature-icon {
+        width: 24px;
+        height: 24px;
+        color: #4f46e5;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    
+    .feature-text {
+        color: #4b5563;
+        line-height: 1.5;
+    }
+    
+    .recent-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+    }
+    
+    .recent-image-card {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row items-center">
+            <div class="md:w-1/2 mb-10 md:mb-0">
+                <h1 class="hero-title">AI Background Remover</h1>
+                <p class="hero-subtitle">Remove background from images instantly, fully <span class="accent-text">automated</span> and free</p>
+                <a href="/bg-remover" class="primary-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Upload Your Image
+                </a>
+            </div>
+            <div class="md:w-1/2">
+                <video class="rounded-lg shadow-lg w-full" autoplay loop muted playsinline>
+                    <source src="{{ url_for('static', filename='img/banner.mp4') }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Image Examples Section -->
+<section class="py-16" style="background-color: var(--section-bg);">
+    <div class="container mx-auto px-4">
+        <h2 class="section-title">Amazing image quality for various scenarios</h2>
+        <p class="section-subtitle">Precisely remove complex backgrounds from product photos, portraits, or any image</p>
+        
+        <div class="flex overflow-x-auto py-4 mb-8 justify-center space-x-4">
+            <button class="px-4 py-2 bg-black text-white rounded-md filter-btn" data-filter="all">All</button>
+            <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md filter-btn" data-filter="people">People</button>
+            <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md filter-btn" data-filter="color">Color</button>
+            <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md filter-btn" data-filter="animals">Animals</button>
+            <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md filter-btn" data-filter="products">Products</button>
+        </div>
+        
+        <div class="example-grid">
+            <div class="example-card" data-category="animals">
+                <img src="{{ url_for('static', filename='img/Animals1.png') }}" alt="Animal Example" class="w-full h-auto">
+            </div>
+            <div class="example-card" data-category="products">
+                <img src="{{ url_for('static', filename='img/Cars1.png') }}" alt="Car Example" class="w-full h-auto">
+            </div>
+            <div class="example-card" data-category="people">
+                <img src="{{ url_for('static', filename='img/People2.png') }}" alt="People Example" class="w-full h-auto">
+            </div>
+            <div class="example-card" data-category="color">
+                <img src="{{ url_for('static', filename='img/Graphics1.png') }}" alt="Color Example" class="w-full h-auto">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Remove Background Instantly Section -->
+<section class="feature-section" style="background-color: var(--bg-primary);">
+    <div class="container mx-auto px-4">
+        <div class="feature-container">
+            <div class="feature-image">
+                <img src="{{ url_for('static', filename='img/remove-background.png') }}" alt="Remove Background Instantly" class="w-full h-auto rounded-lg shadow-xl">
+            </div>
+            <div class="feature-content">
+                <h2 class="feature-title">Remove background <span class="accent-text">instantly</span> with one click</h2>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <p class="feature-text">No complex tools or special skills needed to remove backgrounds in seconds</p>
+                    </li>
+                    <li class="feature-item">
+                        <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <p class="feature-text">Just upload or drag and drop any image to get started</p>
+                    </li>
+                    <li class="feature-item">
+                        <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <p class="feature-text">Preserve fine details like hair and edges for professional results</p>
+                    </li>
+                </ul>
+                <a href="/bg-remover" class="primary-button mt-6">
+                    Try It Now
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Design Section -->
+<section class="feature-section" style="background-color: var(--section-bg);">
+    <div class="container mx-auto px-4">
+        <div class="feature-container">
+            <div class="feature-content">
+                <h2 class="feature-title">Cool designs as you wish</h2>
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <p class="feature-text">Export transparent PNGs for graphic design projects</p>
+                    </li>
+                    <li class="feature-item">
+                        <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <p class="feature-text">Create stunning product photos without expensive studio equipment</p>
+                    </li>
+                    <li class="feature-item">
+                        <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <p class="feature-text">Perfect for social media posts, e-commerce, and professional presentations</p>
+                    </li>
+                </ul>
+                <a href="/bg-remover" class="primary-button mt-6">
+                    Start Designing
+                </a>
+            </div>
+            <div class="feature-image">
+                <img src="{{ url_for('static', filename='img/cool-design.webp') }}" alt="Cool Designs" class="w-full h-auto rounded-lg shadow-xl">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recently Processed Images (Only shown when logged in) -->
+<section id="recentImages" class="py-16 bg-white hidden">
+    <div class="container mx-auto px-4">
+        <h2 class="section-title">Your recently processed images</h2>
+        <p class="section-subtitle">Quick access to your latest background removal projects</p>
+        
+        <div class="recent-images" id="userRecentImages">
+            <!-- Dynamic content will be inserted here via JavaScript -->
+        </div>
+    </div>
+</section>
+
+<!-- Final CTA Section -->
+<section class="py-20 bg-black text-white">
+    <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-6">Ready to remove backgrounds instantly?</h2>
+        <p class="text-xl mb-8 max-w-2xl mx-auto">Try our powerful AI background remover for free. No credit card required.</p>
+        <a href="/bg-remover" class="bg-white text-black font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition duration-300 inline-block">
+            Get Started Now
+        </a>
+        <p class="mt-4 text-gray-400">Or <a href="/pricing" class="underline hover:text-white transition-colors">check our pricing plans</a> for more features</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Image filter functionality
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const exampleCards = document.querySelectorAll('.example-card');
+    
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remove active class from all buttons
+            filterBtns.forEach(b => {
+                b.classList.remove('bg-black', 'text-white');
+                b.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            // Add active class to clicked button
+            this.classList.remove('bg-gray-200', 'text-gray-700');
+            this.classList.add('bg-black', 'text-white');
+            
+            // Get filter value
+            const filter = this.getAttribute('data-filter');
+            
+            // Show/hide cards based on filter
+            exampleCards.forEach(card => {
+                if (filter === 'all') {
+                    card.style.display = 'block';
+                } else {
+                    if (card.getAttribute('data-category') === filter) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        });
+    });
+
+    // Check if user is logged in to show recent images
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            // User is signed in, fetch recent images
+            fetchRecentImages(user.uid);
+        } else {
+            // Hide recent images section if user is not logged in
+            document.getElementById('recentImages').classList.add('hidden');
+        }
+    });
+    
+    function fetchRecentImages(userId) {
+        // In a production environment, this would fetch from a database
+        // For this demo, we'll check if there are any images to show
+        const hasImages = false; // Set to true if there are images
+        const recentImagesSection = document.getElementById('recentImages');
+        const userRecentImages = document.getElementById('userRecentImages');
+        
+        if (hasImages) {
+            // Show the section
+            recentImagesSection.classList.remove('hidden');
+            
+            // Create sample recent images
+            const sampleImages = [
+                { original: 'sample1.jpg', processed: 'sample1-processed.png' },
+                { original: 'sample2.jpg', processed: 'sample2-processed.png' },
+                { original: 'sample3.jpg', processed: 'sample3-processed.png' },
+                { original: 'sample4.jpg', processed: 'sample4-processed.png' }
+            ];
+            
+            // Add sample images to the container
+            sampleImages.forEach(img => {
+                const imgElement = document.createElement('div');
+                imgElement.className = 'recent-image-card';
+                imgElement.innerHTML = `
+                    <img src="{{ url_for('static', filename='img/sample-processed.jpg') }}" 
+                         alt="Recent image" class="w-full h-auto">
+                `;
+                imgElement.addEventListener('click', function() {
+                    window.location.href = '/bg-remover';
+                });
+                userRecentImages.appendChild(imgElement);
+            });
+        } else {
+            // No images to show, keep the section hidden
+            recentImagesSection.classList.add('hidden');
+        }
+    }
+});
+</script>
+{% endblock %} 

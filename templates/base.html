@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en" class="light-theme">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BUMPY | AI Background Remover{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#000000',
+                        secondary: '#ffffff',
+                        accent: '#6b7280',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-down': 'slideDown 0.5s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'pulse': 'pulse 2s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                    },
+                    transitionProperty: {
+                        'height': 'height',
+                        'spacing': 'margin, padding',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Additional animations and styles */
+        /* Theme support */
+        :root {
+            --bg-primary: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --header-bg: #000000;
+            --header-text: #ffffff;
+            --accent-color: #000000;
+            --accent-hover: #333333;
+            --card-bg: #ffffff;
+            --card-border: #f3f4f6;
+            --input-bg: #f9fafb;
+            --input-border: #e5e7eb;
+            --section-bg: #f9fafb;
+            --footer-bg: #ffffff;
+            --footer-text: #4b5563;
+            --footer-heading: #111827;
+            --footer-border: #e5e7eb;
+            --dropdown-bg: #ffffff;
+            --dropdown-text: #111827;
+            --dropdown-hover: #f3f4f6;
+        }
+        
+        html.dark-theme {
+            --bg-primary: #121212;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --header-bg: #000000;
+            --header-text: #ffffff;
+            --accent-color: #000000;
+            --accent-hover: #333333;
+            --card-bg: #1e1e1e;
+            --card-border: #2e2e2e;
+            --input-bg: #2e2e2e;
+            --input-border: #3e3e3e;
+            --section-bg: #1a1a1a;
+            --footer-bg: #1a1a1a;
+            --footer-text: #9ca3af;
+            --footer-heading: #f3f4f6;
+            --footer-border: #2e2e2e;
+            --dropdown-bg: #1e1e1e;
+            --dropdown-text: #f3f4f6;
+            --dropdown-hover: #2e2e2e;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .hover-scale {
+            transition: transform 0.3s ease-in-out;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .menu-fade-in {
+            animation: menuFadeIn 0.3s ease-out forwards;
+        }
+        
+        @keyframes menuFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            transition: all 0.3s ease;
+        }
+        
+        .profile-pic:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Navbar animation */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: white;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .nav-link.active::after {
+            width: 100%;
+        }
+        
+        /* Top Header */
+        .top-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background-color: var(--header-bg);
+            color: var(--header-text);
+        }
+        
+        /* Main content padding */
+        .main-with-header {
+            padding-top: 80px; /* Increased from 64px to 80px */
+        }
+        
+        /* User dropdown */
+        .top-dropdown {
+            top: 100%;
+            bottom: auto;
+        }
+        
+        /* Theme switch */
+        .theme-switch {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .theme-switch:hover {
+            background-color: var(--dropdown-hover);
+        }
+        .theme-switch i {
+            margin-right: 12px;
+        }
+        .theme-switch.dark-mode i {
+            color: #6366f1;
+        }
+        .theme-switch.light-mode i {
+            color: #fbbf24;
+        }
+        
+        /* Footer styles */
+        footer {
+            background-color: var(--footer-bg);
+            color: var(--footer-text);
+            border-color: var(--footer-border);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        footer h3 {
+            color: var(--footer-heading);
+            transition: color 0.3s ease;
+        }
+        
+        footer a, footer p, footer address {
+            color: var(--footer-text);
+            transition: color 0.3s ease;
+        }
+        
+        footer a:hover {
+            color: var(--footer-heading);
+        }
+        
+        /* User dropdown styles */
+        #user-dropdown {
+            background-color: var(--dropdown-bg);
+            color: var(--dropdown-text);
+            border-color: var(--card-border);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        #user-dropdown a, #user-dropdown div {
+            color: var(--dropdown-text);
+            transition: color 0.3s ease, background-color 0.3s ease;
+        }
+        
+        #user-dropdown a:hover, #user-dropdown div:hover {
+            background-color: var(--dropdown-hover);
+        }
+        
+        /* Override Tailwind text colors for dark mode */
+        html.dark-theme .text-gray-600 {
+            color: var(--text-secondary) !important;
+        }
+        
+        html.dark-theme .text-gray-900 {
+            color: var(--text-primary) !important;
+        }
+        
+        html.dark-theme .text-black {
+            color: var(--text-primary) !important;
+        }
+        
+        html.dark-theme .bg-white {
+            background-color: var(--bg-primary) !important;
+        }
+        
+        html.dark-theme .border-gray-200 {
+            border-color: var(--footer-border) !important;
+        }
+    </style>
+    
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-white text-gray-900 flex flex-col min-h-screen">
+    <!-- Top Navigation -->
+    <nav class="bg-black text-white shadow-md fixed top-0 w-full z-50 top-header">
+        <div class="container mx-auto px-4 py-5">
+            <div class="flex justify-between items-center">
+                <a href="/" class="hover-scale">
+                    <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="BUMPY" class="h-8">
+                </a>
+                
+                <!-- Mobile hamburger button -->
+                <button class="md:hidden text-white focus:outline-none" id="mobile-menu-button">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-6" id="desktop-nav">
+                    <a href="/" class="nav-link hover:text-gray-300 transition-all duration-300 {% if request.path == '/' %}active{% endif %}">Home</a>
+                    <a href="/bg-remover" class="nav-link hover:text-gray-300 transition-all duration-300 {% if request.path == '/bg-remover' %}active{% endif %}">Background Remover</a>
+                    <a href="/pricing" class="nav-link hover:text-gray-300 transition-all duration-300 {% if request.path == '/pricing' %}active{% endif %}">Pricing</a>
+                    <a href="/about" class="nav-link hover:text-gray-300 transition-all duration-300 {% if request.path == '/about' %}active{% endif %}">About</a>
+                    <div id="auth-buttons" class="hidden animate-fade-in">
+                        <a href="/auth/login" class="bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition-all duration-300 hover-lift">Login</a>
+                        <a href="/auth/register" class="bg-transparent border border-white text-white px-4 py-2 rounded-lg hover:bg-white hover:text-black ml-2 transition-all duration-300 hover-lift">Register</a>
+                    </div>
+                    <div id="user-menu" class="hidden animate-fade-in">
+                        <div class="relative">
+                            <button id="user-dropdown-btn" class="flex items-center hover:opacity-80 transition-all duration-300">
+                                <div id="user-avatar" class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                                    <img id="profile-pic" src="" alt="" class="profile-pic hidden">
+                                    <span id="user-initials" class="text-black font-semibold">U</span>
+                                </div>
+                            </button>
+                            <div id="user-dropdown" class="absolute top-12 right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-lg z-10 hidden overflow-hidden top-dropdown">
+                                <div class="px-4 py-2 border-b border-gray-200">
+                                    <span id="user-email" class="text-sm block truncate text-gray-600"></span>
+                                </div>
+                                <div class="theme-switch light-mode" id="themeSwitch">
+                                    <i class="fas fa-sun"></i>
+                                    <span>Light Mode</span>
+                                </div>
+                                <a href="/dashboard" class="block px-4 py-2 hover:bg-gray-100 transition-colors duration-300">
+                                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                                </a>
+                                <a href="#" id="logout-btn" class="block px-4 py-2 hover:bg-gray-100 transition-colors duration-300 text-red-600">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Navigation Menu -->
+            <div class="md:hidden hidden transition-all duration-300 mt-4 pb-2" id="mobile-nav">
+                <div class="flex flex-col space-y-3">
+                    <a href="/" class="py-2 {% if request.path == '/' %}font-bold{% endif %}">Home</a>
+                    <a href="/bg-remover" class="py-2 {% if request.path == '/bg-remover' %}font-bold{% endif %}">Background Remover</a>
+                    <a href="/pricing" class="py-2 {% if request.path == '/pricing' %}font-bold{% endif %}">Pricing</a>
+                    <a href="/about" class="py-2 {% if request.path == '/about' %}font-bold{% endif %}">About</a>
+                    <div id="mobile-auth-buttons" class="hidden animate-fade-in py-2 space-y-2">
+                        <a href="/auth/login" class="block bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition-all duration-300 text-center">Login</a>
+                        <a href="/auth/register" class="block bg-transparent border border-white text-white px-4 py-2 rounded-lg hover:bg-white hover:text-black transition-all duration-300 text-center">Register</a>
+                    </div>
+                    <div id="mobile-user-menu" class="hidden animate-fade-in py-2 space-y-2">
+                        <a href="/dashboard" class="block py-2">
+                            <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                        </a>
+                        <a href="#" id="mobile-logout-btn" class="block py-2 text-red-400">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                        </a>
+                        <div class="block py-2" id="mobile-theme-switch">
+                            <i class="fas fa-sun mr-2"></i> Toggle Theme
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 main-with-header">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-10">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+                <!-- Company info -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center mb-4">
+                        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="BUMPY Logo" class="h-8 mr-2">
+                    </div>
+                    <p class="text-gray-600 mb-4">Built for innovation and success</p>
+                    <p class="text-gray-600 mb-2">docs@bumpyai.com</p>
+                </div>
+                
+                <!-- Solutions -->
+                <div>
+                    <h3 class="font-semibold text-black mb-4">Solutions</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/bg-remover" class="text-gray-600 hover:text-black transition-colors">Background Remover</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-black transition-colors">Virtual Office</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-black transition-colors">Flex Office</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-black transition-colors">Fixed Office</a></li>
+                    </ul>
+                </div>
+                
+
+                
+                <!-- Company -->
+                <div>
+                    <h3 class="font-semibold text-black mb-4">About</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-600 hover:text-black transition-colors">Contact</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-black transition-colors">Careers</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-black transition-colors">Our People</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-black transition-colors">Press</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Bottom footer -->
+            <div class="mt-12 pt-6 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-600 mb-4 md:mb-0">© 2025 - BUMPY</p>
+                
+                <!-- Social links -->
+                <div class="flex space-x-4 mb-4 md:mb-0">
+                    <a href="#" class="text-gray-600 hover:text-black transition-colors">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-black transition-colors">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-black transition-colors">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-black transition-colors">
+                        <i class="fab fa-tiktok"></i>
+                    </a>
+                </div>
+                
+                <!-- Legal links -->
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-600 hover:text-black transition-colors text-sm">Terms</a>
+                    <a href="#" class="text-gray-600 hover:text-black transition-colors text-sm">Privacy</a>
+                    <a href="#" class="text-gray-600 hover:text-black transition-colors text-sm">Cookies</a>
+                    <a href="#" class="text-gray-600 hover:text-black transition-colors text-sm">Sitemap</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Firebase Init -->
+    <script>
+        // Firebase configuration from project settings
+        const firebaseConfig = {
+            apiKey: "{{ firebase_api_key }}",
+            authDomain: "{{ firebase_auth_domain }}",
+            projectId: "{{ firebase_project_id }}",
+            storageBucket: "{{ firebase_storage_bucket }}",
+            messagingSenderId: "{{ firebase_messaging_sender_id }}",
+            appId: "{{ firebase_app_id }}",
+            measurementId: "{{ firebase_measurement_id }}"
+        };
+
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            // Add fallback for development mode
+            if (!window.firebase || !firebase.auth) {
+                console.log("Using development authentication mode");
+                window.firebase = window.firebase || {};
+                firebase.auth = firebase.auth || function() {
+                    return {
+                        onAuthStateChanged: function(callback) {
+                            const devUser = {
+                                uid: "dev-user-123",
+                                email: "dev@example.com",
+                                displayName: "Dev User",
+                                photoURL: "https://ui-avatars.com/api/?name=Dev+User&background=random",
+                                getIdToken: function() {
+                                    return Promise.resolve("fake-token-for-development");
+                                }
+                            };
+                            setTimeout(() => callback(devUser), 100);
+                        },
+                        signOut: function() {
+                            return Promise.resolve();
+                        }
+                    };
+                };
+            }
+        }
+    </script>
+
+    <!-- Authentication Script -->
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    
+    <!-- Theme Switcher Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeSwitch = document.getElementById('themeSwitch');
+            const mobileThemeSwitch = document.getElementById('mobile-theme-switch');
+            const htmlElement = document.documentElement;
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileNav = document.getElementById('mobile-nav');
+            const mobileAuthButtons = document.getElementById('mobile-auth-buttons');
+            const mobileUserMenu = document.getElementById('mobile-user-menu');
+            const authButtons = document.getElementById('auth-buttons');
+            const userMenu = document.getElementById('user-menu');
+            const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+            
+            // Mobile menu toggle
+            mobileMenuButton.addEventListener('click', function() {
+                if (mobileNav.classList.contains('hidden')) {
+                    mobileNav.classList.remove('hidden');
+                } else {
+                    mobileNav.classList.add('hidden');
+                }
+            });
+            
+            // Check for saved theme preference or use default
+            const currentTheme = localStorage.getItem('theme') || 'light-theme';
+            htmlElement.className = currentTheme;
+            
+            // Update switch text and icon based on current theme
+            updateThemeSwitchUI();
+            
+            // Toggle theme when switch is clicked
+            themeSwitch.addEventListener('click', function() {
+                toggleTheme();
+            });
+            
+            // Mobile theme toggle
+            if (mobileThemeSwitch) {
+                mobileThemeSwitch.addEventListener('click', function() {
+                    toggleTheme();
+                });
+            }
+            
+            // Mobile logout
+            if (mobileLogoutBtn) {
+                mobileLogoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    firebase.auth().signOut().then(function() {
+                        window.location.href = '/';
+                    }).catch(function(error) {
+                        console.error("Error signing out:", error);
+                    });
+                });
+            }
+            
+            function toggleTheme() {
+                if (htmlElement.classList.contains('light-theme')) {
+                    htmlElement.classList.replace('light-theme', 'dark-theme');
+                    localStorage.setItem('theme', 'dark-theme');
+                } else {
+                    htmlElement.classList.replace('dark-theme', 'light-theme');
+                    localStorage.setItem('theme', 'light-theme');
+                }
+                
+                updateThemeSwitchUI();
+            }
+            
+            function updateThemeSwitchUI() {
+                const isDarkMode = htmlElement.classList.contains('dark-theme');
+                themeSwitch.innerHTML = isDarkMode ? 
+                    '<i class="fas fa-moon"></i><span>Dark Mode</span>' : 
+                    '<i class="fas fa-sun"></i><span>Light Mode</span>';
+                themeSwitch.className = isDarkMode ? 
+                    'theme-switch dark-mode' : 
+                    'theme-switch light-mode';
+                    
+                if (mobileThemeSwitch) {
+                    mobileThemeSwitch.innerHTML = isDarkMode ? 
+                        '<i class="fas fa-moon mr-2"></i> Dark Mode' : 
+                        '<i class="fas fa-sun mr-2"></i> Light Mode';
+                }
+            }
+            
+            // Sync desktop and mobile auth visibility
+            if (authButtons && mobileAuthButtons && userMenu && mobileUserMenu) {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.target === authButtons && mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                            if (authButtons.classList.contains('hidden')) {
+                                mobileAuthButtons.classList.add('hidden');
+                            } else {
+                                mobileAuthButtons.classList.remove('hidden');
+                            }
+                        }
+                        if (mutation.target === userMenu && mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                            if (userMenu.classList.contains('hidden')) {
+                                mobileUserMenu.classList.add('hidden');
+                            } else {
+                                mobileUserMenu.classList.remove('hidden');
+                            }
+                        }
+                    });
+                });
+                
+                observer.observe(authButtons, { attributes: true });
+                observer.observe(userMenu, { attributes: true });
+            }
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

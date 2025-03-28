@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: bumpy
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -c gunicorn_config.py 'app:app'
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: true 

@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}Settings | BUMPY{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <h1 class="text-3xl font-bold mb-8">Settings</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- Sidebar -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-bold mr-4" id="sidebar-avatar">
+                        <span id="sidebar-initials">U</span>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold" id="sidebar-name">User Name</h2>
+                        <p class="text-gray-600" id="sidebar-email">user@example.com</p>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-200 pt-4">
+                    <nav>
+                        <ul class="space-y-2">
+                            <li>
+                                <a href="/dashboard" class="flex items-center p-2 rounded-md hover:bg-gray-100">
+                                    <i class="fas fa-tachometer-alt mr-3"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/bg-remover" class="flex items-center p-2 rounded-md hover:bg-gray-100">
+                                    <i class="fas fa-image mr-3"></i>
+                                    <span>Background Remover</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center p-2 rounded-md hover:bg-gray-100">
+                                    <i class="fas fa-history mr-3"></i>
+                                    <span>Processing History</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/settings" class="flex items-center p-2 rounded-md bg-black text-white">
+                                    <i class="fas fa-cog mr-3"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" id="settings-logout" class="flex items-center p-2 rounded-md hover:bg-gray-100 text-red-600">
+                                    <i class="fas fa-sign-out-alt mr-3"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="md:col-span-3 space-y-6">
+                <!-- Profile Settings -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-6">Profile Settings</h2>
+                    
+                    <form id="profile-form" class="space-y-6">
+                        <!-- Profile Picture -->
+                        <div class="flex flex-col md:flex-row items-start md:items-center">
+                            <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-4xl font-bold mr-6 relative" id="profile-avatar">
+                                <span id="profile-initials">U</span>
+                                <img id="avatar-preview" class="absolute inset-0 w-full h-full rounded-full object-cover hidden">
+                            </div>
+                            <div>
+                                <p class="font-medium mb-2">Profile Picture</p>
+                                <p class="text-gray-500 text-sm mb-3">Upload a profile picture. PNG or JPG up to 2MB.</p>
+                                <div class="flex space-x-3">
+                                    <label for="avatar-upload" class="cursor-pointer bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition">
+                                        <i class="fas fa-upload mr-2"></i> Upload
+                                    </label>
+                                    <input type="file" id="avatar-upload" name="avatar" accept="image/*" class="hidden">
+                                    <button type="button" id="remove-avatar" class="border border-gray-300 px-4 py-2 rounded hover:bg-gray-50 transition">
+                                        <i class="fas fa-trash-alt mr-2"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-200 pt-6">
+                            <!-- Username -->
+                            <div class="mb-4">
+                                <label for="username" class="block font-medium mb-1">Username</label>
+                                <input type="text" id="username" name="username" 
+                                       class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-transparent">
+                                <p class="text-gray-500 text-sm mt-1">Used for your public profile</p>
+                            </div>
+                            
+                            <!-- Display Name -->
+                            <div class="mb-4">
+                                <label for="displayName" class="block font-medium mb-1">Display Name</label>
+                                <input type="text" id="displayName" name="displayName" 
+                                       class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-transparent">
+                            </div>
+                            
+                            <!-- Bio -->
+                            <div class="mb-4">
+                                <label for="bio" class="block font-medium mb-1">Bio</label>
+                                <textarea id="bio" name="bio" rows="3" 
+                                          class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-transparent"></textarea>
+                                <p class="text-gray-500 text-sm mt-1">Tell us a little about yourself</p>
+                            </div>
+                            
+                            <button type="submit" class="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 transition">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Account Settings -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-6">Account Settings</h2>
+                    
+                    <div class="mb-6">
+                        <h3 class="font-medium mb-2">Email Address</h3>
+                        <p id="account-email" class="text-gray-600 mb-2">user@example.com</p>
+                        <button type="button" class="text-sm text-black underline">Change Email</button>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 pt-6 mb-6">
+                        <h3 class="font-medium mb-2">Password</h3>
+                        <p class="text-gray-600 mb-2">••••••••••••</p>
+                        <button type="button" class="text-sm text-black underline">Change Password</button>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 pt-6">
+                        <h3 class="font-medium mb-2">Danger Zone</h3>
+                        <p class="text-gray-600 mb-3">Delete your account and all of your data</p>
+                        <button type="button" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+                            Delete Account
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Subscription Settings -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold">Current Plan</h2>
+                        <a href="/pricing" class="text-sm text-black underline">View All Plans</a>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div>
+                                <div class="flex items-center">
+                                    <span class="text-xl font-bold mr-2" id="plan-display-name">Free</span>
+                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Active</span>
+                                </div>
+                                <p class="text-gray-600 mt-1" id="plan-display-details">10 images/day, standard quality</p>
+                            </div>
+                            <div class="mt-4 md:mt-0">
+                                <a href="/pricing" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition">
+                                    Upgrade
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-medium">Processing Usage</h3>
+                                <p class="text-gray-600 text-sm">Images processed today</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold" id="usage-display">0/25</p>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-black h-2 rounded-full" id="usage-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const sidebarAvatar = document.getElementById('sidebar-avatar');
+        const sidebarInitials = document.getElementById('sidebar-initials');
+        const sidebarName = document.getElementById('sidebar-name');
+        const sidebarEmail = document.getElementById('sidebar-email');
+        const logoutBtn = document.getElementById('settings-logout');
+        
+        const profileAvatar = document.getElementById('profile-avatar');
+        const profileInitials = document.getElementById('profile-initials');
+        const avatarPreview = document.getElementById('avatar-preview');
+        const avatarUpload = document.getElementById('avatar-upload');
+        const removeAvatarBtn = document.getElementById('remove-avatar');
+        
+        const usernameInput = document.getElementById('username');
+        const displayNameInput = document.getElementById('displayName');
+        const bioInput = document.getElementById('bio');
+        const profileForm = document.getElementById('profile-form');
+        
+        const accountEmail = document.getElementById('account-email');
+        const planName = document.getElementById('plan-display-name');
+        const planDetails = document.getElementById('plan-display-details');
+        const usageDisplay = document.getElementById('usage-display');
+        const usageProgress = document.getElementById('usage-progress');
+        
+        // Check if user is logged in
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                // Update user info
+                if (user.displayName) {
+                    sidebarName.textContent = user.displayName;
+                    displayNameInput.value = user.displayName;
+                    
+                    // Get initials for avatar
+                    const initials = user.displayName
+                        .split(' ')
+                        .map(name => name[0])
+                        .join('')
+                        .toUpperCase();
+                    sidebarInitials.textContent = initials;
+                    profileInitials.textContent = initials;
+                } else {
+                    sidebarName.textContent = 'User';
+                    sidebarInitials.textContent = 'U';
+                    profileInitials.textContent = 'U';
+                }
+                
+                sidebarEmail.textContent = user.email;
+                accountEmail.textContent = user.email;
+                
+                // For demo purposes, set a username
+                usernameInput.value = user.email.split('@')[0];
+                
+                // Set a bio placeholder
+                bioInput.placeholder = "Write something about yourself...";
+                
+                // For demo purposes, show random usage
+                const usageCount = Math.floor(Math.random() * 10);
+                const usageLimit = 10;
+                const usagePercentage = (usageCount / usageLimit) * 100;
+                
+                usageDisplay.textContent = `${usageCount}/${usageLimit}`;
+                usageProgress.style.width = `${usagePercentage}%`;
+                
+                // Set plan info - this would come from the server in production
+                planName.textContent = 'Free';
+                planDetails.textContent = '10 images/day, standard quality';
+                
+                // Check if user has a profile picture
+                if (user.photoURL) {
+                    avatarPreview.src = user.photoURL;
+                    avatarPreview.classList.remove('hidden');
+                    profileInitials.classList.add('hidden');
+                    // Same for sidebar avatar (would need an image element there)
+                }
+                
+                // Get firebase ID token for API calls
+                user.getIdToken().then(function(idToken) {
+                    // Store token for later API calls
+                    window.userToken = idToken;
+                    
+                    // Here we would fetch user data from the backend
+                    // For now we just use the Firebase user data
+                });
+            } else {
+                // Redirect to login if not logged in
+                window.location.href = '/auth/login';
+            }
+        });
+        
+        // Handle profile picture upload
+        avatarUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                    avatarPreview.classList.remove('hidden');
+                    profileInitials.classList.add('hidden');
+                    
+                    // In a real app, you'd upload this to your server or storage
+                    // For demo, we just show the preview
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Handle remove avatar button
+        removeAvatarBtn.addEventListener('click', function() {
+            avatarUpload.value = '';
+            avatarPreview.classList.add('hidden');
+            profileInitials.classList.remove('hidden');
+            
+            // In a real app, you'd remove the avatar from server/storage
+        });
+        
+        // Handle profile form submission
+        profileForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show saving indicator
+            const submitBtn = profileForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+            submitBtn.disabled = true;
+            
+            // Gather form data
+            const formData = {
+                username: usernameInput.value,
+                displayName: displayNameInput.value,
+                bio: bioInput.value,
+                // avatar would be handled separately with file upload
+            };
+            
+            // In a real app, you'd send this to your server
+            // For demo, we just simulate a save
+            setTimeout(() => {
+                // Update UI with new values
+                if (formData.displayName) {
+                    sidebarName.textContent = formData.displayName;
+                    
+                    // Update avatar initials
+                    const initials = formData.displayName
+                        .split(' ')
+                        .map(name => name[0])
+                        .join('')
+                        .toUpperCase();
+                    sidebarInitials.textContent = initials;
+                    profileInitials.textContent = initials;
+                }
+                
+                // Show success message
+                alert('Profile updated successfully!');
+                
+                // Reset button
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }, 1500);
+        });
+        
+        // Logout button
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            firebase.auth().signOut()
+                .then(() => {
+                    // Sign-out successful, redirect to home
+                    window.location.href = '/';
+                })
+                .catch((error) => {
+                    console.error('Sign out error:', error);
+                });
+        });
+    });
+</script>
+{% endblock %} 

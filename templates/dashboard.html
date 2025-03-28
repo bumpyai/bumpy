@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | BUMPY{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-12">
+        <h1 class="text-3xl font-bold mb-8">Dashboard</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Sidebar -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-bold mr-4" id="user-avatar">
+                        <span id="user-initials">U</span>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold" id="user-name">User Name</h2>
+                        <p class="text-gray-600" id="user-email"></p>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-200 pt-4">
+                    <nav>
+                        <ul class="space-y-2">
+                            <li>
+                                <a href="#" class="flex items-center p-2 rounded-md bg-black text-white">
+                                    <i class="fas fa-tachometer-alt mr-3"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/bg-remover" class="flex items-center p-2 rounded-md hover:bg-gray-100 nav-link-hover">
+                                    <i class="fas fa-image mr-3"></i>
+                                    <span>Background Remover</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center p-2 rounded-md hover:bg-gray-100 nav-link-hover">
+                                    <i class="fas fa-history mr-3"></i>
+                                    <span>Processing History</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/settings" class="flex items-center p-2 rounded-md hover:bg-gray-100 nav-link-hover">
+                                    <i class="fas fa-cog mr-3"></i>
+                                    <span>Settings</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" id="dashboard-logout" class="flex items-center p-2 rounded-md hover:bg-gray-100 nav-link-hover text-red-600">
+                                    <i class="fas fa-sign-out-alt mr-3"></i>
+                                    <span>Logout</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="md:col-span-2 space-y-6">
+                <!-- Current Plan -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4">Your Current Plan</h2>
+                    <div class="flex flex-col md:flex-row items-center justify-between p-4 bg-gray-50 rounded-lg section-bg">
+                        <div>
+                            <div class="flex items-center">
+                                <span class="text-xl font-bold mr-2" id="plan-name">Free</span>
+                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Active</span>
+                            </div>
+                            <p class="text-gray-600 mt-1" id="plan-details">25 images/day, standard quality</p>
+                        </div>
+                        <div class="mt-4 md:mt-0">
+                            <a href="/pricing" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition">
+                                Upgrade Plan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Stats -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4">Usage Statistics</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-lg section-bg">
+                            <p class="text-gray-500 text-sm">Images Processed</p>
+                            <p class="text-3xl font-bold" id="processed-count">0</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg section-bg">
+                            <p class="text-gray-500 text-sm">Usage Today</p>
+                            <p class="text-3xl font-bold" id="usage-count">0 / 25</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg section-bg">
+                            <p class="text-gray-500 text-sm">Storage Used</p>
+                            <p class="text-3xl font-bold" id="storage-used">0 MB</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Recent Images</h2>
+                        <a href="#" class="text-black hover:underline text-sm">View All</a>
+                    </div>
+                    
+                    <div id="no-activity" class="py-8 text-center text-gray-500">
+                        <i class="fas fa-images text-4xl mb-4 block"></i>
+                        <p>No recently processed images</p>
+                        <a href="/bg-remover" class="mt-4 inline-block bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition">Remove Background</a>
+                    </div>
+                    
+                    <div id="activity-list" class="hidden">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <!-- Recent images will be populated here -->
+                            <div class="image-item rounded-lg overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer">
+                                <img src="{{ url_for('static', filename='img/sample-processed.jpg') }}" alt="Processed image" class="w-full h-32 object-cover">
+                                <div class="p-2 bg-gray-50 section-bg">
+                                    <p class="text-xs text-gray-500">March 15, 2023</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <a href="/bg-remover" class="bg-black text-white p-4 rounded-lg flex items-center hover:bg-gray-800 transition">
+                            <i class="fas fa-image text-xl mr-4"></i>
+                            <div>
+                                <p class="font-semibold">Remove Background</p>
+                                <p class="text-sm text-gray-200">Process a new image</p>
+                            </div>
+                        </a>
+                        <a href="/pricing" class="border border-black p-4 rounded-lg flex items-center hover:bg-gray-50 nav-link-hover transition">
+                            <i class="fas fa-crown text-xl mr-4"></i>
+                            <div>
+                                <p class="font-semibold">Upgrade Plan</p>
+                                <p class="text-sm text-gray-500">Get more processing power</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Dashboard Dark Mode Adjustments */
+    html.dark-theme .bg-gray-50 {
+        background-color: var(--bg-primary);
+    }
+    
+    html.dark-theme .bg-white {
+        background-color: var(--card-bg);
+    }
+    
+    html.dark-theme .section-bg,
+    html.dark-theme .bg-gray-50 {
+        background-color: var(--section-bg);
+    }
+    
+    html.dark-theme .border-gray-200 {
+        border-color: var(--card-border);
+    }
+    
+    html.dark-theme .text-gray-500,
+    html.dark-theme .text-gray-600 {
+        color: var(--text-secondary);
+    }
+    
+    html.dark-theme .nav-link-hover:hover {
+        background-color: var(--dropdown-hover) !important;
+    }
+    
+    html.dark-theme .border-black {
+        border-color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userAvatar = document.getElementById('user-avatar');
+        const userInitials = document.getElementById('user-initials');
+        const userName = document.getElementById('user-name');
+        const userEmail = document.getElementById('user-email');
+        const logoutBtn = document.getElementById('dashboard-logout');
+        const processedCount = document.getElementById('processed-count');
+        const usageCount = document.getElementById('usage-count');
+        const storageUsed = document.getElementById('storage-used');
+        const planName = document.getElementById('plan-name');
+        const planDetails = document.getElementById('plan-details');
+        const noActivity = document.getElementById('no-activity');
+        const activityList = document.getElementById('activity-list');
+        
+        // Check if user is logged in
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                // Update user info
+                if (user.displayName) {
+                    userName.textContent = user.displayName;
+                    // Get initials for avatar
+                    const initials = user.displayName
+                        .split(' ')
+                        .map(name => name[0])
+                        .join('')
+                        .toUpperCase();
+                    userInitials.textContent = initials;
+                } else {
+                    userName.textContent = 'User';
+                    userInitials.textContent = 'U';
+                }
+                
+                userEmail.textContent = user.email;
+                
+                // For demo purposes, we'll show some sample data
+                // In production, these would come from the server
+                processedCount.textContent = Math.floor(Math.random() * 20);
+                usageCount.textContent = processedCount.textContent + ' / 25';
+                storageUsed.textContent = (Math.random() * 100).toFixed(1) + ' MB';
+                
+                // Set plan info - this would come from the server in production
+                // For now, we'll just show the Free plan
+                planName.textContent = 'Free';
+                planDetails.textContent = '25 images/day, standard quality';
+                
+                // Show activity if we have processed images
+                if (parseInt(processedCount.textContent) > 0) {
+                    noActivity.classList.add('hidden');
+                    activityList.classList.remove('hidden');
+                }
+                
+                // Get firebase ID token for API calls
+                user.getIdToken().then(function(idToken) {
+                    // Store token for later API calls
+                    window.userToken = idToken;
+                    
+                    // Here we could fetch user data from the backend
+                    // fetch('/api/user-data', {
+                    //     headers: {
+                    //         'Authorization': 'Bearer ' + idToken
+                    //     }
+                    // })
+                    // .then(response => response.json())
+                    // .then(data => {
+                    //     // Update dashboard with user data
+                    //     planName.textContent = data.plan.name;
+                    //     planDetails.textContent = data.plan.details;
+                    //     processedCount.textContent = data.stats.processed;
+                    //     usageCount.textContent = data.stats.usage;
+                    //     storageUsed.textContent = data.stats.storage;
+                    //     
+                    //     // Show recent images
+                    //     if (data.recentImages && data.recentImages.length > 0) {
+                    //         noActivity.classList.add('hidden');
+                    //         activityList.classList.remove('hidden');
+                    //         
+                    //         // Clear existing children
+                    //         activityList.innerHTML = '';
+                    //         
+                    //         // Add recent images
+                    //         const imageGrid = document.createElement('div');
+                    //         imageGrid.className = 'grid grid-cols-2 md:grid-cols-4 gap-4';
+                    //         
+                    //         data.recentImages.forEach(img => {
+                    //             const imgElement = document.createElement('div');
+                    //             imgElement.className = 'image-item rounded-lg overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer';
+                    //             imgElement.innerHTML = `
+                    //                 <img src="${img.url}" alt="Processed image" class="w-full h-32 object-cover">
+                    //                 <div class="p-2 bg-gray-50">
+                    //                     <p class="text-xs text-gray-500">${img.date}</p>
+                    //                 </div>
+                    //             `;
+                    //             imageGrid.appendChild(imgElement);
+                    //         });
+                    //         
+                    //         activityList.appendChild(imageGrid);
+                    //     }
+                    // });
+                });
+            } else {
+                // Redirect to login if not logged in
+                window.location.href = '/auth/login';
+            }
+        });
+        
+        // Logout button
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            firebase.auth().signOut()
+                .then(() => {
+                    // Sign-out successful, redirect to home
+                    window.location.href = '/';
+                })
+                .catch((error) => {
+                    console.error('Sign out error:', error);
+                });
+        });
+    });
+</script>
+{% endblock %} 

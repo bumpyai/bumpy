@@ -1,0 +1,1618 @@
+{% extends "base.html" %}
+
+{% block title %}AI Background Remover | BUMPY{% endblock %}
+
+{% block head %}
+<style>
+    /* Initial layout styling */
+    .main-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+    
+    /* Hero section */
+    .hero-section {
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 60px 20px 40px;
+    }
+    
+    .hero-title {
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+    }
+    
+    .hero-subtitle {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 40px;
+    }
+    
+    /* Upload card styling */
+    .upload-card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        max-width: 450px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    
+    .upload-heading {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--text-primary);
+    }
+    
+    .upload-subheading {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 24px;
+    }
+    
+    .upload-button {
+        background-color: var(--accent-color);
+        color: white;
+        font-weight: 500;
+        padding: 10px 20px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s;
+    }
+    
+    .upload-button:hover {
+        background-color: var(--accent-hover);
+        transform: translateY(-1px);
+    }
+    
+    .upload-icon {
+        margin-right: 8px;
+    }
+    
+    /* Effect options */
+    .effect-options {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .effect-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        width: 80px;
+        transition: all 0.2s;
+        opacity: 0.7;
+    }
+    
+    .effect-option:hover {
+        opacity: 1;
+    }
+    
+    .effect-option.selected {
+        opacity: 1;
+    }
+    
+    .effect-preview {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 6px;
+        border: 2px solid transparent;
+    }
+    
+    .effect-option.selected .effect-preview {
+        border-color: var(--accent-color);
+    }
+    
+    .effect-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .effect-name {
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+    }
+    
+    .effect-option.selected .effect-name {
+        color: var(--accent-color);
+        font-weight: 500;
+    }
+    
+    /* AI processing indicators */
+    .ai-processing-steps {
+        margin-top: 30px;
+    }
+    
+    .ai-processing-step {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        opacity: 0.5;
+        transition: opacity 0.3s;
+    }
+    
+    .ai-processing-step.active {
+        opacity: 1;
+    }
+    
+    .ai-step-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        position: relative;
+    }
+    
+    .ai-step-icon::before {
+        content: "";
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--accent-color);
+        border-radius: 50%;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    
+    .ai-step-icon.completed::before {
+        background-color: var(--accent-color);
+    }
+    
+    .ai-step-icon.processing::before {
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+    }
+    
+    .ai-step-text {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .ai-processing-step.active .ai-step-text {
+        color: var(--text-primary);
+    }
+    
+    /* File input and dropzone */
+    .file-input {
+        display: none;
+    }
+    
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 15px 0;
+        color: #888;
+        font-size: 14px;
+    }
+    
+    .divider::before,
+    .divider::after {
+        content: "";
+        flex: 1;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .divider::before {
+        margin-right: 10px;
+    }
+    
+    .divider::after {
+        margin-left: 10px;
+    }
+    
+    .paste-hint {
+        font-size: 13px;
+        color: #777;
+        margin-top: 15px;
+    }
+    
+    .keyboard-shortcut {
+        background-color: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+    }
+    
+    /* Loading state */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        display: none;
+    }
+    
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(79, 70, 229, 0.2);
+        border-radius: 50%;
+        border-top-color: #4f46e5;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 20px;
+    }
+    
+    .loading-text {
+        font-size: 16px;
+        color: #4f46e5;
+        font-weight: 500;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Result page layout */
+    .result-page {
+        display: none;
+        background-color: #f9fafb;
+        min-height: calc(100vh - 200px);
+    }
+    
+    .result-header {
+        background-color: white;
+        padding: 16px 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
+    }
+    
+    .result-heading {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .download-button {
+        background-color: var(--accent-color);
+        color: white;
+        font-weight: 500;
+        padding: 8px 16px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .download-button:hover {
+        background-color: var(--accent-hover);
+        transform: translateY(-1px);
+    }
+    
+    .download-icon {
+        margin-right: 6px;
+    }
+    
+    .result-content {
+        padding: 20px 0 50px;
+    }
+    
+    .result-image-container {
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    /* Comparison slider */
+    .comparison-container {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        height: auto;
+    }
+    
+    .result-image {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+    }
+    
+    #originalImage {
+        position: relative;
+        z-index: 1;
+    }
+    
+    #processedImage {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
+        background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                         linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                         linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                         linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+        background-size: 20px 20px;
+        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+    
+    .comparison-slider {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 3;
+        cursor: ew-resize;
+    }
+    
+    .slider-handle {
+        position: absolute;
+        top: 0;
+        width: 4px;
+        height: 100%;
+        background-color: white;
+        z-index: 4;
+        pointer-events: none;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .slider-handle::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .slider-handle::before {
+        content: "↔";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 14px;
+        color: var(--accent-color);
+        z-index: 5;
+    }
+    
+    .result-info {
+        padding: 15px;
+        border-top: 1px solid #f3f4f6;
+    }
+    
+    .applied-effect {
+        font-size: 14px;
+        color: #6b7280;
+        margin: 0;
+    }
+    
+    .action-buttons {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .primary-button {
+        background-color: var(--accent-color);
+        color: white;
+        font-weight: 500;
+        padding: 12px 24px;
+        border-radius: 8px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    
+    .primary-button:hover {
+        background-color: var(--accent-hover);
+        transform: translateY(-2px);
+    }
+    
+    /* Examples section */
+    .examples-section {
+        padding: 60px 0;
+        background-color: #f9fafb;
+        display: block;
+    }
+    
+    .steps-section {
+        padding: 60px 0;
+        background-color: white;
+    }
+    
+    .step-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .step-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .step-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background-color: #4f46e5;
+        color: white;
+        border-radius: 50%;
+        font-weight: bold;
+        margin-bottom: 16px;
+    }
+    
+    .step-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: #111827;
+    }
+    
+    .step-description {
+        color: #6b7280;
+        line-height: 1.5;
+    }
+    
+    .section-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 12px;
+        text-align: center;
+    }
+    
+    .section-subtitle {
+        font-size: 18px;
+        color: #6b7280;
+        max-width: 600px;
+        margin: 0 auto 40px;
+        text-align: center;
+    }
+    
+    .camera-example {
+        display: flex;
+        justify-content: center;
+        margin-top: 60px;
+    }
+    
+    .camera-example-card {
+        background-color: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+    }
+    
+    /* API integration and target audience section styles */
+    .api-section {
+        padding: 80px 0;
+        background-color: white;
+    }
+    
+    .api-container {
+        display: flex;
+        align-items: center;
+        gap: 60px;
+    }
+    
+    @media (max-width: 768px) {
+        .api-container {
+            flex-direction: column;
+        }
+    }
+    
+    .api-image {
+        flex: 1;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .api-content {
+        flex: 1;
+    }
+    
+    .api-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 16px;
+    }
+    
+    .api-description {
+        color: #4b5563;
+        line-height: 1.6;
+        margin-bottom: 24px;
+    }
+    
+    .api-features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .api-feature-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+    
+    .api-feature-icon {
+        width: 24px;
+        height: 24px;
+        color: #4f46e5;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    
+    .api-feature-text {
+        color: #4b5563;
+        line-height: 1.5;
+    }
+    
+    .audience-section {
+        padding: 80px 0;
+        background-color: #f9fafb;
+        text-align: center;
+    }
+    
+    .audience-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 24px;
+        margin-top: 40px;
+    }
+    
+    .audience-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 30px 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    .audience-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 16px;
+        color: #4f46e5;
+    }
+    
+    .audience-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 12px;
+    }
+    
+    .audience-description {
+        color: #6b7280;
+        line-height: 1.5;
+    }
+    
+    .drop-zone {
+        border: 2px dashed #e5e7eb;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s;
+        margin-bottom: 20px;
+        cursor: pointer;
+    }
+    
+    .drop-zone:hover {
+        border-color: var(--accent-color);
+        background-color: rgba(79, 70, 229, 0.03);
+    }
+    
+    .drop-zone.drag-over {
+        border-color: var(--accent-color);
+        background-color: rgba(79, 70, 229, 0.05);
+    }
+    
+    .drop-zone p {
+        margin: 10px 0 0;
+        color: #6b7280;
+    }
+    
+    .hidden {
+        display: none;
+    }
+    
+    .auth-alert {
+        background-color: #FEF2F2;
+        border: 1px solid #FECACA;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 20px;
+        color: #B91C1C;
+    }
+    
+    .auth-alert p {
+        margin: 0;
+        font-size: 14px;
+    }
+    
+    .auth-link {
+        color: #B91C1C;
+        font-weight: 500;
+        text-decoration: underline;
+    }
+    
+    /* Download options styling */
+    .download-dropdown-container {
+        position: relative;
+    }
+    
+    .download-options-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        width: 280px;
+        z-index: 100;
+        overflow: hidden;
+        display: none;
+    }
+    
+    .download-options-menu.active {
+        display: block;
+        animation: fadeIn 0.2s ease;
+    }
+    
+    .download-option-group {
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    
+    .download-option-title {
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .download-option {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+    
+    .download-option:hover {
+        background-color: #f3f4f6;
+    }
+    
+    .download-option.premium {
+        color: #6b7280;
+    }
+    
+    .download-option.premium:hover {
+        background-color: #f9fafb;
+    }
+    
+    .download-option-icon {
+        margin-right: 12px;
+        color: #6b7280;
+    }
+    
+    .download-format {
+        margin-left: auto;
+        font-size: 12px;
+        color: #9ca3af;
+    }
+    
+    .premium-badge {
+        margin-left: auto;
+        background-color: #e0e7ff;
+        color: #4f46e5;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+    
+    .upgrade-prompt {
+        padding: 12px 16px;
+        background-color: #f9fafb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .upgrade-link {
+        color: var(--accent-color);
+        font-weight: 600;
+        text-decoration: none;
+        margin-right: 6px;
+    }
+    
+    .upgrade-text {
+        font-size: 12px;
+        color: #6b7280;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="hero-section">
+        <h1 class="hero-title">AI Background Remover</h1>
+        <p class="hero-subtitle">Remove backgrounds from images instantly with our advanced AI</p>
+    </div>
+    
+    <div id="uploadSection" class="upload-card">
+        <h2 class="upload-heading">Upload Your Image</h2>
+        <p class="upload-subheading">Get a transparent background in seconds</p>
+        
+        <form id="uploadForm">
+            <input type="file" id="fileInput" class="file-input" accept="image/jpeg,image/png,image/webp">
+            <input type="hidden" id="pastedImageData" name="image_data">
+            <input type="hidden" id="selectedEffect" name="effect" value="transparent">
+            
+            <div id="dropZone" class="drop-zone">
+                <svg xmlns="http://www.w3.org/2000/svg" class="upload-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p>Drag & drop your image here</p>
+            </div>
+            
+            <button type="button" id="browseButton" class="upload-button">
+                <svg xmlns="http://www.w3.org/2000/svg" class="upload-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Browse File
+            </button>
+            
+            <div class="divider">OR</div>
+            
+            <div class="paste-hint">Paste image directly using <span class="keyboard-shortcut">Ctrl+V</span></div>
+            
+            <!-- AI Effect Options -->
+            <div class="effect-options">
+                <div class="effect-option selected" data-effect="transparent">
+                    <div class="effect-preview">
+                        <img src="{{ url_for('static', filename='img/effects/transparent.png') }}" alt="Transparent Effect" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNGM0Y0RjYiLz48cGF0aCBkPSJNMzAgMjBDMjQuNDc3MiAyMCAyMCAyNC40NzcyIDIwIDMwQzIwIDM1LjUyMjggMjQuNDc3MiA0MCAzMCA0MEMzNS41MjI4IDQwIDQwIDM1LjUyMjggNDAgMzBDNDAgMjQuNDc3MiAzNS41MjI4IDIwIDMwIDIwWiIgZmlsbD0id2hpdGUiLz48L3N2Zz4='">
+                    </div>
+                    <div class="effect-name">Transparent</div>
+                </div>
+                <div class="effect-option" data-effect="shadow">
+                    <div class="effect-preview">
+                        <img src="{{ url_for('static', filename='img/effects/shadow.png') }}" alt="Shadow Effect" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNGM0Y0RjYiLz48cGF0aCBkPSJNMzAgMjBDMjQuNDc3MiAyMCAyMCAyNC40NzcyIDIwIDMwQzIwIDM1LjUyMjggMjQuNDc3MiA0MCAzMCA0MEMzNS41MjI4IDQwIDQwIDM1LjUyMjggNDAgMzBDNDAgMjQuNDc3MiAzNS41MjI4IDIwIDMwIDIwWiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNMzUgMjVDMjkuNDc3MiAyNSAyNSAyOS40NzcyIDI1IDM1QzI1IDQwLjUyMjggMjkuNDc3MiA0NSAzNSA0NUM0MC41MjI4IDQ1IDQ1IDQwLjUyMjggNDUgMzVDNDUgMjkuNDc3MiA0MC41MjI4IDI1IDM1IDI1WiIgZmlsbD0iIzAwMDAwMDIwIi8+PC9zdmc+'">
+                    </div>
+                    <div class="effect-name">Shadow</div>
+                </div>
+                <div class="effect-option" data-effect="blur">
+                    <div class="effect-preview">
+                        <img src="{{ url_for('static', filename='img/effects/blur.png') }}" alt="Blur Effect" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNGM0Y0RjYiLz48ZWxsaXBzZSBjeD0iMzAiIGN5PSIzMCIgcng9IjIwIiByeT0iMTUiIGZpbGw9IiNlMGUwZTAiLz48cGF0aCBkPSJNMzAgMjBDMjQuNDc3MiAyMCAyMCAyNC40NzcyIDIwIDMwQzIwIDM1LjUyMjggMjQuNDc3MiA0MCAzMCA0MEMzNS41MjI4IDQwIDQwIDM1LjUyMjggNDAgMzBDNDAgMjQuNDc3MiAzNS41MjI4IDIwIDMwIDIwWiIgZmlsbD0id2hpdGUiLz48L3N2Zz4='">
+                    </div>
+                    <div class="effect-name">Blur</div>
+                </div>
+                <div class="effect-option" data-effect="artistic">
+                    <div class="effect-preview">
+                        <img src="{{ url_for('static', filename='img/effects/artistic.png') }}" alt="Artistic Effect" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2NDY2ZjEiIC8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjODg0NGZmIiAvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0idXJsKCNncmFkKSIvPjxwYXRoIGQ9Ik0zMCAyMEMyNC40NzcyIDIwIDIwIDI0LjQ3NzIgMjAgMzBDMjAgMzUuNTIyOCAyNC40NzcyIDQwIDMwIDQwQzM1LjUyMjggNDAgNDAgMzUuNTIyOCA0MCAzMEM0MCAyNC40NzcyIDM1LjUyMjggMjAgMzAgMjBaIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg=='">
+                    </div>
+                    <div class="effect-name">Artistic</div>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Authentication Alert -->
+        <div id="authAlert" class="auth-alert hidden">
+            <p>Please <a href="/auth/login" class="auth-link">log in</a> to use this feature</p>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p class="loading-text">Processing your image...</p>
+        
+        <!-- AI Processing Steps -->
+        <div class="ai-processing-steps" style="margin-top: 30px;">
+            <div class="ai-processing-step active" id="step1">
+                <div class="ai-step-icon processing" id="step1Icon"></div>
+                <div class="ai-step-text">Analyzing image...</div>
+            </div>
+            <div class="ai-processing-step" id="step2">
+                <div class="ai-step-icon" id="step2Icon"></div>
+                <div class="ai-step-text">Identifying subject...</div>
+            </div>
+            <div class="ai-processing-step" id="step3">
+                <div class="ai-step-icon" id="step3Icon"></div>
+                <div class="ai-step-text">Removing background...</div>
+            </div>
+            <div class="ai-processing-step" id="step4">
+                <div class="ai-step-icon" id="step4Icon"></div>
+                <div class="ai-step-text">Applying finishing touches...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Result Section -->
+    <div class="result-page" id="resultPage">
+        <div class="result-header">
+            <div class="container mx-auto px-4 py-2">
+                <div class="flex justify-between items-center">
+                    <h2 class="result-heading">Background Removed</h2>
+                    <div class="download-dropdown-container">
+                        <button id="downloadOptionsBtn" class="download-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="download-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download Options
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div id="downloadOptions" class="download-options-menu">
+                            <div class="download-option-group">
+                                <div class="download-option-title">Free Options</div>
+                                <a href="#" id="downloadPngBtn" class="download-option">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="download-option-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    <span>PNG</span>
+                                    <span class="download-format">Transparent background</span>
+                                </a>
+                                <a href="#" id="downloadJpgBtn" class="download-option">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="download-option-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    <span>JPEG</span>
+                                    <span class="download-format">White background</span>
+                                </a>
+                            </div>
+                            <div class="download-option-group">
+                                <div class="download-option-title">Premium Options</div>
+                                <a href="#" class="download-option premium">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="download-option-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    <span>GIF</span>
+                                    <span class="premium-badge">Pro</span>
+                                </a>
+                                <a href="#" class="download-option premium">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="download-option-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    <span>HD Quality</span>
+                                    <span class="premium-badge">Pro</span>
+                                </a>
+                                <a href="#" class="download-option premium">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="download-option-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    <span>2K Resolution</span>
+                                    <span class="premium-badge">Pro</span>
+                                </a>
+                                <a href="#" class="download-option premium">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="download-option-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    <span>4K Resolution</span>
+                                    <span class="premium-badge">Pro</span>
+                                </a>
+                            </div>
+                            <div class="upgrade-prompt">
+                                <a href="/pricing" class="upgrade-link">Upgrade to Pro</a>
+                                <span class="upgrade-text">for premium downloads</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="result-content">
+            <div class="container mx-auto px-4">
+                <div class="max-w-3xl mx-auto">
+                    <div class="result-image-container">
+                        <div class="comparison-container">
+                            <img id="originalImage" class="result-image" alt="Original Image">
+                            <img id="processedImage" class="result-image" alt="Processed Image">
+                            
+                            <div id="comparisonSlider" class="comparison-slider">
+                                <div id="sliderHandle" class="slider-handle"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="result-info">
+                            <div class="applied-effect" style="display: none;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="newImageButton" class="primary-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                            Remove Another Image
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const fileInput = document.getElementById('fileInput');
+        const pastedImageData = document.getElementById('pastedImageData');
+        const selectedEffect = document.getElementById('selectedEffect');
+        const dropZone = document.getElementById('dropZone');
+        const browseButton = document.getElementById('browseButton');
+        const uploadForm = document.getElementById('uploadForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const resultPage = document.getElementById('resultPage');
+        const uploadSection = document.getElementById('uploadSection');
+        const authAlert = document.getElementById('authAlert');
+        const effectOptions = document.querySelectorAll('.effect-option');
+        
+        // Store the processed image URL for downloads
+        let processedImageUrl = '';
+        // For tracking task status
+        let currentTaskId = null;
+        let statusPollingInterval = null;
+        
+        // AI Processing Steps
+        const processingSteps = [
+            document.getElementById('step1'),
+            document.getElementById('step2'),
+            document.getElementById('step3'),
+            document.getElementById('step4')
+        ];
+        
+        const processingIcons = [
+            document.getElementById('step1Icon'),
+            document.getElementById('step2Icon'),
+            document.getElementById('step3Icon'),
+            document.getElementById('step4Icon')
+        ];
+        
+        // Check authentication
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (!user && (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')) {
+                authAlert.classList.remove('hidden');
+            }
+        });
+        
+        // Setup event listeners
+        browseButton.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', function(e) {
+            if (fileInput.files.length > 0) {
+                uploadImage(fileInput.files[0]);
+            }
+        });
+        
+        // Handle drag and drop
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        
+        dropZone.addEventListener('dragleave', function() {
+            dropZone.classList.remove('drag-over');
+        });
+        
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            if (e.dataTransfer.files.length > 0) {
+                uploadImage(e.dataTransfer.files[0]);
+            }
+        });
+        
+        // Handle pasted images
+        document.addEventListener('paste', function(e) {
+            if (e.clipboardData && e.clipboardData.items) {
+                const items = e.clipboardData.items;
+                
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        
+                        // Convert the blob to base64
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            pastedImageData.value = e.target.result;
+                            uploadPastedImage();
+                        };
+                        
+                        reader.readAsDataURL(blob);
+                    }
+                }
+            }
+        });
+        
+        // Handle effect selection
+        effectOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove selected class from all options
+                effectOptions.forEach(opt => opt.classList.remove('selected'));
+                
+                // Add selected class to clicked option
+                this.classList.add('selected');
+                
+                // Update selected effect
+                selectedEffect.value = this.getAttribute('data-effect');
+            });
+        });
+        
+        // Update AI processing steps based on real progress
+        function updateProcessingSteps(progress, message) {
+            // Reset all steps
+            processingSteps.forEach((step, index) => {
+                step.classList.remove('active');
+                processingIcons[index].classList.remove('processing', 'completed');
+            });
+            
+            // Show message if provided
+            if (message) {
+                document.querySelector('.loading-text').textContent = message;
+            }
+            
+            // Determine which step should be active based on progress
+            let activeStep = 0;
+            if (progress < 30) {
+                activeStep = 0; // Analyzing image
+            } else if (progress < 60) {
+                activeStep = 1; // Identifying subject
+            } else if (progress < 85) {
+                activeStep = 2; // Removing background
+            } else {
+                activeStep = 3; // Applying finishing touches
+            }
+            
+            // Mark completed steps
+            for (let i = 0; i < activeStep; i++) {
+                processingSteps[i].classList.remove('active');
+                processingIcons[i].classList.remove('processing');
+                processingIcons[i].classList.add('completed');
+            }
+            
+            // Mark current active step
+            processingSteps[activeStep].classList.add('active');
+            processingIcons[activeStep].classList.add('processing');
+            
+            // If process is complete (100%), mark all steps as done
+            if (progress >= 100) {
+                processingSteps.forEach((step, index) => {
+                    step.classList.remove('active');
+                    processingIcons[index].classList.remove('processing');
+                    processingIcons[index].classList.add('completed');
+                });
+            }
+        }
+        
+        // Poll for processing status
+        function startStatusPolling(taskId, resultUrl) {
+            if (statusPollingInterval) {
+                clearInterval(statusPollingInterval);
+            }
+            
+            statusPollingInterval = setInterval(() => {
+                fetch(`/bg-remover/status/${taskId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'complete') {
+                            // Processing finished
+                            clearInterval(statusPollingInterval);
+                            
+                            // Update UI to show completed
+                            updateProcessingSteps(100, "Processing complete!");
+                            
+                            // Short delay then show results
+                            setTimeout(() => {
+                                showResults(resultUrl, data.effect || selectedEffect.value);
+                            }, 500);
+                        } 
+                        else if (data.status === 'error') {
+                            // Error occurred
+                            clearInterval(statusPollingInterval);
+                            handleError(new Error(data.message || "Processing failed"));
+                        }
+                        else {
+                            // Update progress
+                            updateProcessingSteps(data.progress, data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error checking status:", error);
+                        // Don't stop polling on network errors
+                    });
+            }, 500); // Poll every 500ms
+        }
+        
+        function uploadImage(file) {
+            // Check if file is an image
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file (JPEG, PNG, or WEBP)');
+                return;
+            }
+            
+            // Check file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size exceeds the 10MB limit. Please choose a smaller image.');
+                return;
+            }
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('effect', selectedEffect.value);
+            
+            // Show loading overlay
+            loadingOverlay.style.display = 'flex';
+            updateProcessingSteps(0, "Initializing...");
+            
+            // Upload image
+            fetch('/bg-remover/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Authentication required. Please log in.');
+                    } else {
+                        throw new Error(`Server error (${response.status}). Please try again later.`);
+                    }
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'processing' && data.task_id) {
+                    // The server has started async processing
+                    currentTaskId = data.task_id;
+                    startStatusPolling(data.task_id, data.result_url);
+                } else {
+                    // Legacy response or synchronous processing
+                    handleResponse(data);
+                }
+            })
+            .catch(handleError);
+        }
+        
+        function uploadPastedImage() {
+            // Show loading overlay
+            loadingOverlay.style.display = 'flex';
+            updateProcessingSteps(0, "Initializing...");
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('image_data', pastedImageData.value);
+            formData.append('effect', selectedEffect.value);
+            
+            // Upload image
+            fetch('/bg-remover/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'processing' && data.task_id) {
+                    // The server has started async processing
+                    currentTaskId = data.task_id;
+                    startStatusPolling(data.task_id, data.result_url);
+                } else {
+                    // Legacy response or synchronous processing
+                    handleResponse(data);
+                }
+            })
+            .catch(handleError);
+        }
+        
+        // Check image display function - moved here
+        function checkImageDisplay() {
+            const originalImage = document.getElementById('originalImage');
+            const processedImage = document.getElementById('processedImage');
+            
+            console.log('Original image:', {
+                src: originalImage.src,
+                complete: originalImage.complete,
+                naturalWidth: originalImage.naturalWidth,
+                naturalHeight: originalImage.naturalHeight,
+                displayed: originalImage.offsetParent !== null
+            });
+            
+            console.log('Processed image:', {
+                src: processedImage.src,
+                complete: processedImage.complete,
+                naturalWidth: processedImage.naturalWidth,
+                naturalHeight: processedImage.naturalHeight,
+                displayed: processedImage.offsetParent !== null
+            });
+            
+            // Add visible error message if images aren't loading
+            if (!processedImage.complete || processedImage.naturalWidth === 0) {
+                const resultContainer = document.querySelector('.result-page');
+                const errorMsg = document.createElement('div');
+                errorMsg.classList.add('error-message');
+                errorMsg.style.color = 'red';
+                errorMsg.style.padding = '10px';
+                errorMsg.style.marginTop = '10px';
+                errorMsg.style.border = '1px solid red';
+                errorMsg.style.backgroundColor = '#ffeeee';
+                errorMsg.textContent = 'The image failed to load. Please try refreshing the page or uploading a different image.';
+                
+                // Only add if not already present
+                if (!document.querySelector('.error-message')) {
+                    resultContainer.appendChild(errorMsg);
+                }
+            }
+        }
+        
+        function showResults(resultUrl, effectType) {
+            // Hide loading overlay
+            loadingOverlay.style.display = 'none';
+            
+            // Show result page
+            resultPage.style.display = 'block';
+            uploadSection.style.display = 'none';
+            
+            // Set the image sources explicitly with a timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const originalImg = document.getElementById('originalImage');
+            const processedImg = document.getElementById('processedImage');
+            
+            console.log("BEFORE - Original image src:", originalImg.src);
+            console.log("BEFORE - Processed image src:", processedImg.src);
+            
+            // Explicitly set image attributes for debugging
+            originalImg.setAttribute('crossorigin', 'anonymous');
+            processedImg.setAttribute('crossorigin', 'anonymous');
+            
+            // Get the current original image URL and ensure it's valid
+            const originalUrl = originalImg.src || '';
+            
+            // Force reload images with timestamp to avoid caching
+            if (originalUrl && !originalUrl.endsWith('#')) {
+                originalImg.src = originalUrl.split('?')[0] + '?t=' + timestamp;
+            }
+            
+            // Set processed image with timestamp
+            processedImg.src = resultUrl + '?t=' + timestamp;
+            
+            // Store the processed image URL for download buttons
+            processedImageUrl = resultUrl;
+            
+            // Log for debugging
+            console.log("AFTER - Original image:", originalImg.src);
+            console.log("AFTER - Result image:", processedImg.src);
+            console.log("Processed Image URL stored for download:", processedImageUrl);
+            
+            // Force image reload and add event listeners
+            processedImg.onload = function() {
+                console.log("Processed image loaded successfully, dimensions:", 
+                            processedImg.naturalWidth + "x" + processedImg.naturalHeight);
+                initComparisonSlider();
+                checkImageDisplay();
+            };
+            
+            processedImg.onerror = function() {
+                console.error("Failed to load processed image:", resultUrl);
+                alert("Failed to load the processed image. Please try again.");
+                checkImageDisplay();
+            };
+            
+            // Add event listener for original image too
+            originalImg.onload = function() {
+                console.log("Original image loaded successfully, dimensions:", 
+                          originalImg.naturalWidth + "x" + originalImg.naturalHeight);
+            };
+            
+            originalImg.onerror = function() {
+                console.error("Failed to load original image:", originalImg.src);
+            };
+            
+            // Set a timeout to check image display status after a few seconds
+            setTimeout(checkImageDisplay, 3000);
+            
+            // Add effect name to the result info if it's not transparent
+            if (effectType && effectType !== 'transparent') {
+                const effectDisplay = document.querySelector('.applied-effect');
+                if (effectDisplay) {
+                    effectDisplay.textContent = 'Effect: ' + effectType.charAt(0).toUpperCase() + effectType.slice(1);
+                    effectDisplay.style.display = 'block';
+                }
+            }
+        }
+        
+        function handleResponse(data) {
+            // Set a short timeout to make sure AI steps are displayed (at least 3 seconds)
+            setTimeout(() => {
+                // For backwards compatibility with non-async processing
+                if (data.status === 'success') {
+                    // Update original image source first
+                    const originalImg = document.getElementById('originalImage');
+                    originalImg.src = data.original_url;
+                    
+                    console.log("Setting original image source:", data.original_url);
+                    console.log("Setting processed image source:", data.result_url);
+                    
+                    // Show results page with processed image
+                    showResults(data.result_url, data.effect);
+                } else {
+                    console.error('Error:', data.message);
+                    handleError(new Error(data.message || "Processing failed"));
+                }
+            }, 3000);
+        }
+        
+        function handleError(error) {
+            console.error('Error:', error);
+            
+            // Clear status polling if active
+            if (statusPollingInterval) {
+                clearInterval(statusPollingInterval);
+                statusPollingInterval = null;
+            }
+            
+            // Hide loading overlay
+            loadingOverlay.style.display = 'none';
+            
+            // Show a more detailed error message
+            alert(`An error occurred while processing your image: ${error.message || 'Unknown error'}\n\nPlease try again with a different image or contact support if the problem persists.`);
+        }
+        
+        // Reset button
+        document.getElementById('newImageButton').addEventListener('click', function() {
+            resultPage.style.display = 'none';
+            uploadSection.style.display = 'block';
+            fileInput.value = '';
+            pastedImageData.value = '';
+            
+            // Reset processing steps
+            processingSteps.forEach((step, index) => {
+                step.classList.remove('active');
+                processingIcons[index].classList.remove('processing', 'completed');
+            });
+            
+            // Reset any applied effect info
+            const effectDisplay = document.querySelector('.applied-effect');
+            if (effectDisplay) {
+                effectDisplay.textContent = '';
+                effectDisplay.style.display = 'none';
+            }
+            
+            // Clear any active polling
+            if (statusPollingInterval) {
+                clearInterval(statusPollingInterval);
+                statusPollingInterval = null;
+            }
+        });
+        
+        // Comparison slider
+        function initComparisonSlider() {
+            const slider = document.getElementById('comparisonSlider');
+            const processedImage = document.getElementById('processedImage');
+            const sliderHandle = document.getElementById('sliderHandle');
+            
+            if (!slider || !processedImage || !sliderHandle) return;
+            
+            // Set initial position
+            const initialPosition = 50;
+            processedImage.style.clipPath = `inset(0 0 0 ${initialPosition}%)`;
+            sliderHandle.style.left = `${initialPosition}%`;
+            
+            // Handle slider drag
+            let isDragging = false;
+            
+            slider.addEventListener('mousedown', startDrag);
+            slider.addEventListener('touchstart', startDrag, { passive: true });
+            
+            function startDrag(e) {
+                isDragging = true;
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', drag, { passive: false });
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchend', stopDrag);
+                
+                // Prevent default to avoid text selection
+                e.preventDefault();
+                
+                // Handle the drag immediately
+                drag(e);
+            }
+            
+            function drag(e) {
+                if (!isDragging) return;
+                
+                let clientX;
+                if (e.type === 'touchmove') {
+                    e.preventDefault(); // Prevent scrolling while dragging
+                    clientX = e.touches[0].clientX;
+                } else {
+                    clientX = e.clientX;
+                }
+                
+                const rect = slider.getBoundingClientRect();
+                let position = (clientX - rect.left) / rect.width * 100;
+                
+                // Constrain position to slider width
+                position = Math.max(0, Math.min(100, position));
+                
+                // Update processed image clip path and slider handle position
+                processedImage.style.clipPath = `inset(0 0 0 ${position}%)`;
+                sliderHandle.style.left = `${position}%`;
+            }
+            
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('touchmove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchend', stopDrag);
+            }
+        }
+        
+        // Initialize comparison slider on page load
+        if (document.getElementById('comparisonSlider')) {
+            initComparisonSlider();
+        }
+
+        // Download options handling
+        const downloadOptionsBtn = document.getElementById('downloadOptionsBtn');
+        const downloadOptions = document.getElementById('downloadOptions');
+        const downloadPngBtn = document.getElementById('downloadPngBtn');
+        const downloadJpgBtn = document.getElementById('downloadJpgBtn');
+        const premiumOptions = document.querySelectorAll('.download-option.premium');
+
+        // Toggle download options menu
+        downloadOptionsBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            downloadOptions.classList.toggle('active');
+        });
+
+        // Close download options when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!downloadOptionsBtn.contains(e.target) && !downloadOptions.contains(e.target)) {
+                downloadOptions.classList.remove('active');
+            }
+        });
+
+        // PNG download (transparent background)
+        downloadPngBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (processedImageUrl) {
+                const link = document.createElement('a');
+                link.href = processedImageUrl;
+                link.download = 'removed-background.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                downloadOptions.classList.remove('active');
+            }
+        });
+
+        // JPG download (white background)
+        downloadJpgBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (processedImageUrl) {
+                // Convert transparent PNG to JPEG with white background
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                
+                img.onload = function() {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    // Fill canvas with white background
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw the image on top
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Convert to JPEG dataURL and download
+                    const jpgUrl = canvas.toDataURL('image/jpeg', 0.9);
+                    const link = document.createElement('a');
+                    link.href = jpgUrl;
+                    link.download = 'removed-background.jpg';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+                
+                img.src = processedImageUrl;
+                downloadOptions.classList.remove('active');
+            }
+        });
+
+        // Handle premium options to show upgrade modal
+        premiumOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                showUpgradeModal();
+            });
+        });
+
+        // Show upgrade modal
+        function showUpgradeModal() {
+            // Simple alert for now, but this could be a modal
+            alert('This feature requires a Pro subscription. Please upgrade your plan to access premium downloads.');
+            downloadOptions.classList.remove('active');
+        }
+    });
+</script>
+{% endblock %} 

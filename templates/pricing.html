@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}Pricing | BUMPY{% endblock %}
+
+{% block head %}
+<style>
+    .pricing-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 80px 20px;
+    }
+    
+    .pricing-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+    
+    .pricing-title {
+        font-size: 40px;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+    
+    .pricing-subtitle {
+        font-size: 18px;
+        color: #6b7280;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .pricing-grid {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 60px;
+    }
+    
+    @media (max-width: 768px) {
+        .pricing-grid {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+    
+    .pricing-card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        max-width: 320px;
+        transition: transform 0.3s, box-shadow 0.3s;
+        position: relative;
+    }
+    
+    .pricing-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .pricing-card.popular {
+        transform: scale(1.05);
+        z-index: 1;
+    }
+    
+    .pricing-card.popular:hover {
+        transform: translateY(-10px) scale(1.05);
+    }
+    
+    .discount-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background-color: #ff3366;
+        color: white;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 16px;
+        z-index: 2;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+        padding: 30px 20px;
+        text-align: center;
+    }
+    
+    .card-header.discovery {
+        background-color: #00BCD4;
+        color: white;
+    }
+    
+    .card-header.success {
+        background-color: #4CAF50;
+        color: white;
+    }
+    
+    .card-header.progression {
+        background-color: #FF4081;
+        color: white;
+    }
+    
+    .plan-name {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .plan-duration {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 20px;
+    }
+    
+    .plan-price {
+        font-size: 36px;
+        font-weight: 800;
+        margin-bottom: 5px;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .price-currency {
+        position: absolute;
+        top: 5px;
+        left: -15px;
+        font-size: 16px;
+        font-weight: normal;
+    }
+    
+    .price-period {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .price-total {
+        font-size: 14px;
+        margin-top: 5px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .plan-features {
+        padding: 30px 20px;
+        list-style: none;
+    }
+    
+    .feature-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        color: var(--text-primary);
+    }
+    
+    .feature-icon {
+        margin-right: 10px;
+        color: var(--accent-color);
+    }
+    
+    .select-plan-btn {
+        display: block;
+        background-color: var(--accent-color);
+        color: white;
+        text-align: center;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin: 0 20px 20px;
+        font-weight: 600;
+        transition: background-color 0.3s;
+        text-decoration: none;
+    }
+    
+    .select-plan-btn:hover {
+        background-color: var(--accent-hover);
+    }
+    
+    .guarantee-section {
+        text-align: center;
+        margin-top: 50px;
+    }
+    
+    .guarantee-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: var(--text-primary);
+    }
+    
+    .guarantee-text {
+        color: #6b7280;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .free-tier{cursor: not-allowed;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pricing-container">
+    <div class="pricing-header">
+        <h1 class="pricing-title">Choose Your Plan</h1>
+        <p class="pricing-subtitle">Select the perfect plan for your needs. All plans include access to our AI background removal tool.</p>
+    </div>
+    
+    <div class="pricing-grid">
+        <!-- Discovery Plan -->
+        <div class="pricing-card">
+            <div class="card-header discovery">
+                <h2 class="plan-name">Free Tier</h2>
+                <p class="plan-duration">Unlimited</p>
+                <div class="plan-price">
+                    <span class="price-currency">$</span>0
+                    <span class="price-period">/month</span>
+                </div>
+                <p class="price-total">Total payment of $0</p>
+            </div>
+            <ul class="plan-features">
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>limited video lessons</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>limited course materials</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>25 images requests per day</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>Normal quality exports</span>
+                </li>
+            </ul>
+            <a href="#" class="select-plan-btn free-tier">SELECT</a>
+        </div>
+        
+        <!-- Success Plan -->
+        <div class="pricing-card popular">
+            <div class="card-header success">
+                <h2 class="plan-name">LIGHT</h2>
+                <p class="plan-duration">6 MONTH SUBSCRIPTION</p>
+                <div class="plan-price">
+                    <span class="price-currency">$</span>7.99
+                    <span class="price-period">/month</span>
+                </div>
+                <p class="price-total">Total payment of $47.94</p>
+            </div>
+            <ul class="plan-features">
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>Unlimited video lessons</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>Unlimited course materials</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>Unlimited quizzes</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>200 image removals per day</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>HD , 2K quality exports</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>Batch processing</span>
+                </li>
+            </ul>
+            <a href="#" class="select-plan-btn">SELECT</a>
+        </div>
+        
+        <!-- Progression Plan -->
+        <div class="pricing-card">
+            <div class="discount-badge">-40%</div>
+            <div class="card-header progression">
+                <h2 class="plan-name">Premium</h2>
+                <p class="plan-duration">6 MONTH SUBSCRIPTION</p>
+                <div class="plan-price">
+                    <span class="price-currency">$</span>17.99
+                    <span class="price-period">/month</span>
+                </div>
+                <p class="price-total">Total payment of $107.94</p>
+            </div>
+            <ul class="plan-features">
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>Unlimited video lessons</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>Unlimited course materials</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>Unlimited quizzes</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>Unlimited image removals</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>4K quality exports</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>Batch processing</span>
+                </li>
+                <li class="feature-item">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <span>API access</span>
+                </li>
+            </ul>
+            <a href="#" class="select-plan-btn">SELECT</a>
+        </div>
+    </div>
+    
+    <div class="guarantee-section">
+        <h3 class="guarantee-title">100% Money-Back Guarantee</h3>
+        <p class="guarantee-text">Not satisfied with our service? We offer a full refund within 14 days of your purchase, no questions asked.</p>
+    </div>
+</div>
+{% endblock %} 
