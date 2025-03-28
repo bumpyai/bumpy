@@ -11,7 +11,26 @@ services:
         value: true
       - key: REMBG_CACHE_DIR
         value: /tmp/rembg_cache
+      - key: REMBG_MODEL_FILENAME
+        value: isnet-general-use.pth
+      - key: MAX_UPLOAD_SIZE
+        value: 5242880  # 5MB max upload
     scaling:
       minInstances: 1
-      maxInstances: 2
-    plan: standard 
+      maxInstances: 1  # Reduced to 1 to avoid memory issues
+    plan: standard
+    healthCheckPath: /health
+    # Set a higher request timeout (20 minutes)
+    httpServer:
+      routes:
+        - type: rewrite
+          source: /*
+          destination: /*
+      headers:
+        - path: /*
+          name: Cache-Control
+          value: no-cache, no-store
+    disk:
+      name: tmpdata
+      mountPath: /tmp
+      sizeGB: 1 

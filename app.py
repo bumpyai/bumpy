@@ -122,11 +122,36 @@ def pricing():
 @app.route('/health')
 def health_check():
     """Health check endpoint for monitoring"""
+    status = "healthy"
+    message = "Service is running normally"
+    
+    # Check if rembg is working
+    try:
+        import rembg
+        # Just import to verify it's available
+        status_details = {"rembg": "available"}
+    except Exception as e:
+        status = "degraded"
+        message = f"rembg not available: {str(e)}"
+        status_details = {"rembg": "unavailable", "error": str(e)}
+    
+    # Check directories
+    upload_dir = os.path.join('static', 'uploads')
+    results_dir = os.path.join('static', 'results')
+    
+    dirs_ok = os.path.exists(upload_dir) and os.path.exists(results_dir)
+    if not dirs_ok:
+        status = "degraded"
+        message = "Storage directories not available"
+        status_details["directories"] = "missing"
+    
     return jsonify({
-        "status": "healthy",
+        "status": status,
         "version": "1.0.0",
-        "environment": flask_env
-    }), 200
+        "environment": flask_env,
+        "message": message,
+        "details": status_details
+    }), 200 if status == "healthy" else 207
 
 @app.route('/settings')
 def settings():

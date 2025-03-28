@@ -16,21 +16,25 @@ logging.basicConfig(level=logging.INFO)
 logging.info("Initializing rembg and pre-downloading models...")
 
 try:
-    import rembg
-    import rembg.session_factory
-    import rembg.sessions.u2net
-    import rembg.sessions.isnet
+    # Set environment variables for rembg before importing
+    os.environ["REMBG_CACHE_DIR"] = os.environ.get('REMBG_CACHE_DIR', '/tmp/rembg_cache')
+    os.environ["U2NET_HOME"] = os.environ.get('REMBG_CACHE_DIR', '/tmp/rembg_cache')
+    os.environ["REMBG_MODEL_FILENAME"] = "isnet-general-use.pth"  # Use a smaller model by default
     
-    # Create cache directory if specified in environment
-    cache_dir = os.environ.get('REMBG_CACHE_DIR', '/tmp/rembg_cache')
-    os.makedirs(cache_dir, exist_ok=True)
+    # Make sure cache directory exists
+    os.makedirs(os.environ["REMBG_CACHE_DIR"], exist_ok=True)
+    logging.info(f"Using cache directory: {os.environ['REMBG_CACHE_DIR']}")
+    
+    # Now import rembg
+    import rembg
     
     # Pre-initialize the models to download them
-    logging.info("Pre-loading u2net model")
-    u2net = rembg.new_session("u2net")
-    
-    logging.info("Pre-loading isnet model")
-    isnet = rembg.new_session("isnet")
+    logging.info("Pre-loading isnet-general-use model (faster)")
+    try:
+        isnet = rembg.new_session("isnet-general-use")
+        logging.info("isnet-general-use model loaded successfully!")
+    except Exception as e:
+        logging.error(f"Error loading isnet model: {str(e)}")
     
     logging.info("Models pre-loaded successfully!")
 except Exception as e:

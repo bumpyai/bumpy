@@ -660,25 +660,25 @@ def _basic_bg_removal(input_path, output_path):
                 input_data = input_file.read()
                 
             # Process the image with a timeout guard
-            # We'll use a more robust approach with explicit model selection
+            # Use smaller, faster models to avoid timeouts
             try:
-                # First try with the u2net model (more accurate but slower)
-                logging.info(f"Attempting background removal with u2net model")
+                # Use isnet-general-use model which is faster and smaller
+                logging.info(f"Attempting background removal with isnet-general-use model")
                 output_data = rembg.remove(
                     input_data,
-                    session=rembg.new_session("u2net"),
+                    session=rembg.new_session("isnet-general-use"),
                     only_mask=False,
-                    alpha_matting=True,
-                    alpha_matting_foreground_threshold=240,
-                    alpha_matting_background_threshold=10
+                    alpha_matting=False  # Disable alpha matting for speed
                 )
             except Exception as model_error:
-                # If that fails, try with the isnet model (faster)
-                logging.warning(f"u2net model failed, falling back to isnet model: {str(model_error)}")
+                # If that fails, try with simpler settings
+                logging.warning(f"isnet-general-use model failed, trying with u2netp (smaller model): {str(model_error)}")
                 output_data = rembg.remove(
                     input_data, 
-                    session=rembg.new_session("isnet"),
-                    only_mask=False
+                    session=rembg.new_session("u2netp"),  # Much smaller model
+                    only_mask=False,
+                    alpha_matting=False,
+                    post_process_mask=True  # Extra processing to clean up the mask
                 )
             
             # Save the output
@@ -694,26 +694,47 @@ def _basic_bg_removal(input_path, output_path):
             # Open the image with PIL
             img = Image.open(input_path).convert("RGBA")
             
+            # Resize image if it's too large (to prevent timeouts)
+            max_size = 1000  # Maximum width or height
+            if img.width > max_size or img.height > max_size:
+                # Calculate new dimensions while preserving aspect ratio
+                if img.width > img.height:
+                    new_width = max_size
+                    new_height = int(img.height * (max_size / img.width))
+                else:
+                    new_height = max_size
+                    new_width = int(img.width * (max_size / img.height))
+                logging.info(f"Resizing image from {img.width}x{img.height} to {new_width}x{new_height}")
+                img = img.resize((new_width, new_height), Image.LANCZOS)
+            
             # Create a simple mask by detecting edges
             # This is very simple but will work as a last resort
             if HAVE_CV2 and HAVE_NUMPY:
                 # Use OpenCV for better edge detection if available
-                cv_img = cv2.imread(input_path)
-                gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
-                blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-                edges = cv2.Canny(blurred, 50, 150)
-                
-                # Dilate edges to create a mask
-                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-                dilated = cv2.dilate(edges, kernel, iterations=3)
-                
-                # Convert back to PIL
-                mask = Image.fromarray(dilated).convert("L")
-                mask = mask.filter(ImageFilter.GaussianBlur(radius=2))
-                
-                # Create transparent image
-                result = img.copy()
-                result.putalpha(mask)
+                try:
+                    # Convert PIL image to OpenCV format
+                    cv_img = np.array(img.convert('RGB'))
+                    cv_img = cv_img[:, :, ::-1].copy()  # RGB to BGR
+                    
+                    # Process with OpenCV
+                    gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+                    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+                    edges = cv2.Canny(blurred, 50, 150)
+                    
+                    # Dilate edges to create a mask
+                    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+                    dilated = cv2.dilate(edges, kernel, iterations=3)
+                    
+                    # Convert back to PIL
+                    mask = Image.fromarray(dilated).convert("L")
+                    mask = mask.filter(ImageFilter.GaussianBlur(radius=2))
+                except Exception as cv_error:
+                    logging.error(f"OpenCV processing failed: {str(cv_error)}")
+                    # Fall back to PIL-only method
+                    mask = img.convert("L")
+                    mask = mask.filter(ImageFilter.FIND_EDGES)
+                    mask = mask.filter(ImageFilter.GaussianBlur(radius=1))
+                    mask = mask.point(lambda x: 255 if x > 128 else 0)
             else:
                 # Simple PIL-only method
                 # Create a mask based on edge detection
@@ -721,10 +742,10 @@ def _basic_bg_removal(input_path, output_path):
                 mask = mask.filter(ImageFilter.FIND_EDGES)
                 mask = mask.filter(ImageFilter.GaussianBlur(radius=1))
                 mask = mask.point(lambda x: 255 if x > 128 else 0)
-                
-                # Apply mask to original image
-                result = img.copy()
-                result.putalpha(mask)
+            
+            # Apply mask to original image
+            result = Image.new('RGBA', img.size, (0, 0, 0, 0))
+            result.paste(img, (0, 0), mask)
             
             # Save the result
             result.save(output_path, format="PNG")
