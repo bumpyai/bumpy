@@ -40,7 +40,7 @@ BUMPY is a web application that allows users to easily remove backgrounds from i
 3. Connect your GitHub repository.
 4. Use the following settings:
    - Build Command: `pip install -r requirements.txt`
-   - Start Command: `gunicorn -c gunicorn_config.py 'app:app'`
+   - Start Command: `gunicorn app:app`
 5. Add the required environment variables in the Render dashboard.
 6. Deploy the service.
 
