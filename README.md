@@ -40,8 +40,17 @@ BUMPY is a web application that allows users to easily remove backgrounds from i
 3. Connect your GitHub repository.
 4. Use the following settings:
    - Build Command: `pip install -r requirements.txt`
-   - Start Command: `gunicorn app:app`
-5. Add the required environment variables in the Render dashboard.
+   - Start Command: `gunicorn wsgi:app`
+5. Add the required environment variables in the Render dashboard:
+   - `FLASK_ENV`: Set to `production`
+   - `FIREBASE_API_KEY`: Your Firebase API key
+   - `FIREBASE_AUTH_DOMAIN`: Your Firebase auth domain
+   - `FIREBASE_PROJECT_ID`: Your Firebase project ID
+   - `FIREBASE_STORAGE_BUCKET`: Your Firebase storage bucket
+   - `FIREBASE_MESSAGING_SENDER_ID`: Your Firebase messaging sender ID
+   - `FIREBASE_APP_ID`: Your Firebase app ID
+   - `FIREBASE_MEASUREMENT_ID`: Your Firebase measurement ID
+   - `SECRET_KEY`: A random string for Flask session encryption
 6. Deploy the service.
 
 ## Environment Variables
