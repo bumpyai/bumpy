@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: bumpy-debug
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: true
+    scaling:
+      minInstances: 1
+      maxInstances: 1 
