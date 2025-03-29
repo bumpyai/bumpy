@@ -235,6 +235,9 @@ def upload_image():
         
     # Ensure the uploads directory exists
     try:
+        # Import PIL here to handle the image processing
+        from PIL import Image, ImageOps
+        
         # Get user ID from session or use anonymous
         user_id = session.get('user_id', 'anonymous')
         upload_dir = os.path.join('static', 'uploads', user_id)
@@ -254,15 +257,54 @@ def upload_image():
         file.save(file_path)
         logger.info(f"File saved to {file_path}")
         
-        # In a simplified implementation, we'll just return success
-        # In reality, you would process the image to remove background
-        result_filename = unique_filename
-        result_path = os.path.join(results_dir, result_filename)
-        
-        # Simply copy the file for this demonstration
-        # In production, you would use your ML model to process the image
-        import shutil
-        shutil.copy(file_path, result_path)
+        # Process the image to remove background (simplified version)
+        try:
+            # Open the image
+            img = Image.open(file_path)
+            
+            # Convert to RGBA if not already
+            if img.mode != 'RGBA':
+                img = img.convert('RGBA')
+            
+            # Create a transparent background image
+            result_filename = f"{uuid.uuid4()}.png"  # Always use PNG for transparency
+            result_path = os.path.join(results_dir, result_filename)
+            
+            # Simple approach: Keep the center 80% of the image, make edges transparent
+            width, height = img.size
+            
+            # Create a new image with an alpha channel
+            result_img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            
+            # Create a simple oval/circular mask (this is a very simple effect)
+            # In a real app, you'd use ML for background removal
+            mask = Image.new('L', (width, height), 0)
+            center_x, center_y = width // 2, height // 2
+            
+            # Draw an ellipse
+            from PIL import ImageDraw
+            draw = ImageDraw.Draw(mask)
+            
+            # Ellipse parameters: bounding box (left, top, right, bottom)
+            # We make the ellipse slightly smaller than the image
+            margin_x = width // 8
+            margin_y = height // 8
+            draw.ellipse((margin_x, margin_y, width - margin_x, height - margin_y), fill=255)
+            
+            # Apply the mask
+            result_img.paste(img, (0, 0), mask)
+            
+            # Save the result
+            result_img.save(result_path, "PNG")
+            logger.info(f"Processed image saved to {result_path}")
+            
+        except Exception as img_error:
+            logger.error(f"Error processing image: {str(img_error)}")
+            # If image processing fails, just copy the original as fallback
+            import shutil
+            if not os.path.exists(result_path):
+                shutil.copy(file_path, result_path)
+                logger.warning("Falling back to original image copy")
         
         # Get the absolute URL for the result image
         result_url = f"/static/results/{user_id}/{result_filename}"
