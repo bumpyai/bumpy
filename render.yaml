@@ -3,7 +3,7 @@ services:
     name: bumpy
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn wsgi:app
+    startCommand: gunicorn -c gunicorn_config.py 'wsgi:app'
     envVars:
       - key: FLASK_ENV
         value: production
@@ -15,6 +15,8 @@ services:
         value: isnet-general-use.pth
       - key: MAX_UPLOAD_SIZE
         value: 5242880  # 5MB max upload
+      - key: PORT
+        value: 10000  # Explicit port assignment
     scaling:
       minInstances: 1
       maxInstances: 1  # Reduced to 1 to avoid memory issues

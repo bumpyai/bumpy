@@ -49,6 +49,21 @@ spec.loader.exec_module(app_module)
 # This is what Gunicorn will import
 app = app_module.app
 
+# Make sure setup is called
+if hasattr(app_module, 'setup'):
+    logging.info("Running setup function...")
+    app_module.setup()
+    logging.info("Setup complete")
+
+# Set default port if not in environment
+if 'PORT' not in os.environ:
+    os.environ['PORT'] = '10000'
+    logging.info(f"Setting default PORT to {os.environ['PORT']}")
+else:
+    logging.info(f"Using PORT from environment: {os.environ['PORT']}")
+
+# For testing directly through Python (not via Gunicorn)
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Default to 5000 if PORT is not set
+    port = int(os.environ.get("PORT", 10000))  # Default to 10000 if PORT is not set
+    logging.info(f"Starting app on port {port}")
     app.run(host="0.0.0.0", port=port)
