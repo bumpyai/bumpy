@@ -210,12 +210,10 @@ def upload_image():
         import shutil
         shutil.copy(file_path, result_path)
         
-        # Return the paths for the client to use
+        # Return the paths for the client to use - matching the expected format
         return jsonify({
-            "success": True,
-            "original_file": f"/static/uploads/{user_id}/{unique_filename}",
-            "processed_file": f"/static/results/{user_id}/{result_filename}",
-            "message": "Image uploaded successfully. Background removal simulation active."
+            "status": "success",
+            "url": f"/static/results/{user_id}/{result_filename}"
         })
     
     except Exception as e:
