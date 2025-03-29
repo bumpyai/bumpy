@@ -2,14 +2,16 @@ services:
   - type: web
     name: bumpy
     env: python
-    buildCommand: echo "No build needed"
-    startCommand: python simple_server.py
+    buildCommand: pip install -r flask_requirements.txt
+    startCommand: python app_direct.py
     envVars:
       - key: PYTHONUNBUFFERED
         value: true
+      - key: FLASK_ENV
+        value: production
     scaling:
       minInstances: 1
-      maxInstances: 1  # Reduced to 1 to avoid memory issues
+      maxInstances: 1
     plan: standard
     healthCheckPath: /health
     disk:
