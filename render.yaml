@@ -2,11 +2,9 @@ services:
   - type: web
     name: bumpy
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python test_app.py
+    buildCommand: echo "No build needed"
+    startCommand: python simple_server.py
     envVars:
-      - key: FLASK_ENV
-        value: production
       - key: PYTHONUNBUFFERED
         value: true
     scaling:
