@@ -25,7 +25,11 @@ app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_for_testing')
 # Flask routes
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        logger.error(f"Error rendering index: {str(e)}")
+        return "<h1>BUMPY</h1><p>Welcome to Bumpy - Your Background Removal Solution!</p>"
 
 @app.route('/health')
 def health_check():
@@ -38,24 +42,56 @@ def health_check():
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html')
+    try:
+        return render_template('dashboard.html')
+    except Exception as e:
+        logger.error(f"Error rendering dashboard: {str(e)}")
+        return "<h1>Dashboard</h1><p>Your BUMPY dashboard will appear here.</p>"
 
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    try:
+        return render_template('about.html')
+    except Exception as e:
+        logger.error(f"Error rendering about: {str(e)}")
+        return "<h1>About BUMPY</h1><p>BUMPY is an AI-powered background removal tool.</p>"
 
 @app.route('/pricing')
 def pricing():
-    return render_template('pricing.html')
+    try:
+        return render_template('pricing.html')
+    except Exception as e:
+        logger.error(f"Error rendering pricing: {str(e)}")
+        return "<h1>BUMPY Pricing</h1><p>Our pricing plans will appear here.</p>"
+
+# Add the missing bg-remover route
+@app.route('/bg-remover')
+def bg_remover():
+    logger.info("Background remover page requested")
+    try:
+        return render_template('bg_remover.html')
+    except Exception as e:
+        logger.error(f"Error rendering bg_remover: {str(e)}")
+        return "<h1>Background Removal Tool</h1><p>Upload an image to remove its background.</p>"
 
 # Error handlers
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 404
+    logger.warning(f"404 error: {request.path}")
+    try:
+        return render_template('404.html'), 404
+    except Exception as template_error:
+        logger.error(f"Error rendering 404 template: {str(template_error)}")
+        return "<h1>404 - Page Not Found</h1><p>The page you requested could not be found.</p>", 404
 
 @app.errorhandler(500)
 def server_error(e):
-    return render_template('500.html'), 500
+    logger.error(f"500 error: {str(e)}")
+    try:
+        return render_template('500.html'), 500
+    except Exception as template_error:
+        logger.error(f"Error rendering 500 template: {str(template_error)}")
+        return "<h1>500 - Server Error</h1><p>An internal server error occurred. Please try again later.</p>", 500
 
 # Create required directories
 def create_required_directories():
